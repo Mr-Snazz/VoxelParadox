@@ -318,6 +318,7 @@ json toJson(const ImportVoxFilesModule& module) {
       {"spawn_chance", module.spawnChance},
       {"rotation_mode", voxRotationModeId(module.rotationMode)},
       {"fixed_rotation", module.fixedRotation},
+      {"default_voxel", toJson(module.defaultVoxel)},
       {"color_mapping", voxColorMappingId(module.colorMapping)},
       {"seed_offset", module.seedOffset},
   };
@@ -377,6 +378,13 @@ bool fromJson(const json& value, ImportVoxFilesModule& outModule,
   }
   outModule.rotationMode = rotationMode;
   outModule.fixedRotation = std::clamp(value.value("fixed_rotation", 0), 0, 3);
+
+  BlockType defaultVoxel = outModule.defaultVoxel;
+  if (!fromJson(value.value("default_voxel", json()), defaultVoxel)) {
+    outError = "import_vox_files.settings.default_voxel uses an unknown block id.";
+    return false;
+  }
+  outModule.defaultVoxel = defaultVoxel;
 
   VoxColorMapping colorMapping = VoxColorMapping::DEFAULT;
   if (!tryParseVoxColorMapping(

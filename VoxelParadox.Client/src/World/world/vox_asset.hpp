@@ -14,6 +14,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -179,12 +180,15 @@ inline std::vector<std::string> getVoxFilesRecursive(const std::string& root) {
 // Retorno: devolve 'const VoxStructureData*' para dar acesso direto ao objeto resolvido por esta rotina.
 inline const VoxStructureData* loadVoxStructure(
     const std::string& path,
-    VoxColorMapping mapping = VoxColorMapping::DEFAULT) {
-    static std::mutex cacheMutex;
-    static std::unordered_map<std::string, std::shared_ptr<VoxStructureData>> cache;
-    const std::string resolvedPath = AppPaths::resolveString(path);
-    const std::string cacheKey =
-        resolvedPath + "#" + std::to_string(static_cast<int>(mapping));
+    VoxColorMapping mapping = VoxColorMapping::DEFAULT,
+    std::optional<BlockType> defaultBlock = std::nullopt) {
+  static std::mutex cacheMutex;
+  static std::unordered_map<std::string, std::shared_ptr<VoxStructureData>> cache;
+  const std::string resolvedPath = AppPaths::resolveString(path);
+  const std::string cacheKey =
+        resolvedPath + "#" + std::to_string(static_cast<int>(mapping)) + "#" +
+        (defaultBlock.has_value() ? std::to_string(static_cast<int>(*defaultBlock))
+                                  : std::string("-"));
     {
         std::lock_guard<std::mutex> lock(cacheMutex);
         auto cached = cache.find(cacheKey);
@@ -296,7 +300,10 @@ inline const VoxStructureData* loadVoxStructure(
         data->voxels.reserve(rawVoxels.size());
         for (const RawVoxel& raw : rawVoxels) {
             if (raw.colorIndex == 0) continue;
-            const BlockType block = mapVoxColorToBlock(palette[raw.colorIndex], mapping);
+            const BlockType block = defaultBlock.has_value()
+                                        ? *defaultBlock
+                                        : mapVoxColorToBlock(palette[raw.colorIndex],
+                                                             mapping);
             if (block == BlockType::AIR) continue;
 
             // MagicaVoxel uses Z-up; the game uses Y-up.

@@ -26,6 +26,7 @@
         "min_y": -8,
         "pattern": "random_scatter",
         "rotation_mode": "random_90",
+        "default_voxel": "stone",
         "seed_offset": 0,
         "source_directory": "Assets/Voxs/Ruins",
         "spawn_chance": 0.25

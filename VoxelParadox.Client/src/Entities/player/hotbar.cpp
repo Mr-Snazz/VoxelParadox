@@ -366,4 +366,30 @@ void PlayerHotbar::consumeCraftIngredients(int amountPerSlot) {
         }
     }
 }
+
+PlayerHotbar::PersistentState PlayerHotbar::capturePersistentState() const {
+    PersistentState state;
+    state.storageSlots = storageSlots;
+    state.craftSlots = craftSlots;
+    state.heldSlot = heldSlot;
+    state.selectedIndex = selectedIndex;
+    state.inventoryOpen = inventoryOpen;
+    return state;
+}
+
+void PlayerHotbar::applyPersistentState(const PersistentState& state) {
+    storageSlots = state.storageSlots;
+    craftSlots = state.craftSlots;
+    heldSlot = state.heldSlot;
+    selectedIndex = std::clamp(state.selectedIndex, 0, HOTBAR_SLOT_COUNT - 1);
+    inventoryOpen = state.inventoryOpen;
+
+    for (Slot& slot : storageSlots) {
+        sanitize(slot);
+    }
+    for (Slot& slot : craftSlots) {
+        sanitize(slot);
+    }
+    sanitize(heldSlot);
+}
 #pragma endregion

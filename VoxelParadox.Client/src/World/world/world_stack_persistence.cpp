@@ -1,5 +1,6 @@
 #include "world_stack.hpp"
 
+#include <algorithm>
 #include <cstdio>
 
 namespace {
@@ -289,6 +290,40 @@ bool WorldStack::deleteUniverseAtPortal(const glm::ivec3& portalBlock) {
 
     saveActiveToCache();
     return true;
+}
+
+std::vector<WorldStack::NamedPortalEntry> WorldStack::listNamedPortalsInCurrentWorld() {
+    std::vector<NamedPortalEntry> entries;
+    if (!activeWorld) {
+        return entries;
+    }
+
+    entries.reserve(activeWorld->portalBlocks.size());
+    for (const auto& [blockPos, childSeed] : activeWorld->portalBlocks) {
+        const BiomeSelection childBiome =
+            getResolvedPortalBiomeSelection(*activeWorld, blockPos, childSeed);
+        const std::string universeName = getUniverseName(childSeed, childBiome);
+        if (universeName.empty()) {
+            continue;
+        }
+
+        entries.push_back({blockPos, childSeed, childBiome, universeName});
+    }
+
+    std::sort(entries.begin(), entries.end(),
+              [](const NamedPortalEntry& a, const NamedPortalEntry& b) {
+                  if (a.universeName != b.universeName) {
+                      return a.universeName < b.universeName;
+                  }
+                  if (a.block.x != b.block.x) {
+                      return a.block.x < b.block.x;
+                  }
+                  if (a.block.y != b.block.y) {
+                      return a.block.y < b.block.y;
+                  }
+                  return a.block.z < b.block.z;
+              });
+    return entries;
 }
 
 std::string WorldStack::presetUniverseFilename(std::uint32_t seed,

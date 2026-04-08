@@ -175,6 +175,9 @@ bool BiomeMakerApp::initialize() {
     appendLog("Bootstrap initialization failed.");
     return false;
   }
+
+  glfwMaximizeWindow(window_);
+
   if (!renderer_.init()) {
     appendLog("Editor renderer initialization failed.");
     return false;
@@ -425,6 +428,10 @@ void BiomeMakerApp::syncPreviewSource() {
     return;
   }
 
+  if (ImGui::IsAnyItemActive()) {
+    return;
+  }
+
   previewWorld_.setMode(currentPreset_.preview.defaultMode);
   previewWorld_.setSandboxRadius(currentPreset_.preview.sandboxRadius);
   previewWorld_.setStreamRenderDistance(currentPreset_.preview.streamRenderDistance);
@@ -435,6 +442,11 @@ void BiomeMakerApp::syncPreviewSource() {
 }
 
 void BiomeMakerApp::handleShortcuts() {
+  const ImGuiIO& io = ImGui::GetIO();
+  if (io.WantCaptureKeyboard || io.WantTextInput || ImGui::IsAnyItemActive()) {
+    return;
+  }
+
   const bool ctrlDown =
       Input::keyDown(GLFW_KEY_LEFT_CONTROL) || Input::keyDown(GLFW_KEY_RIGHT_CONTROL);
   const bool shiftDown =
@@ -1363,6 +1375,12 @@ void BiomeMakerApp::drawInspector() {
           markSelectedModuleDirty("Updated VOX rotation mode.");
         }
 
+        ImGui::BeginDisabled(vox.colorMapping != VoxColorMapping::DEFAULT);
+        if (drawBlockTypeCombo("Default Voxel", vox.defaultVoxel)) {
+          markSelectedModuleDirty("Updated VOX default voxel.");
+        }
+        ImGui::EndDisabled();
+
         if (vox.rotationMode == VoxRotationMode::FIXED) {
           int fixedRotation = vox.fixedRotation;
           const char* fixedRotations[] = {"0", "90", "180", "270"};
@@ -1734,7 +1752,12 @@ void BiomeMakerApp::drawViewportWindow(float dtSeconds, float timeSeconds) {
       mousePos.y >= viewportScreenPos.y &&
       mousePos.y <= viewportScreenPos.y + available.y;
 
+  const bool wasCapturing = cameraController_.isCapturing();
   cameraController_.update(camera_, dtSeconds, hovered);
+  if (!wasCapturing && cameraController_.isCapturing()) {
+    ImGui::ClearActiveID();
+    ImGui::SetWindowFocus("Viewport");
+  }
   if (hovered && Input::keyPressed(GLFW_KEY_F)) {
     cameraController_.focusOnAnchor(camera_, previewWorld_.anchorChunk());
   }

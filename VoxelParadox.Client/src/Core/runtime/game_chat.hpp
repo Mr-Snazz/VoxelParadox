@@ -71,4 +71,6 @@ private:
                            const std::string& arguments);
   bool executeSummonCommand(GameChatCommandContext& commandContext,
                             const std::string& arguments);
+  bool executeSandboxCommand(GameChatCommandContext& commandContext,
+                             const std::string& arguments);
 };

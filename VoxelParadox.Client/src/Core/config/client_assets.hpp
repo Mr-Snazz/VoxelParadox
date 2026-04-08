@@ -9,7 +9,7 @@ inline constexpr char kBlockModelsDirectory[] = "Assets/Models/block";
 inline constexpr char kEntityModelsDirectory[] = "Assets/Models/entity";
 inline constexpr char kRecipesDirectory[] = "Assets/Recipes";
 inline constexpr char kVoxDirectory[] = "Assets/Voxs";
-inline constexpr char kSaveWorldDirectory[] = "Saves/Worlds";
+inline constexpr char kSaveWorldDirectory[] = "Saves/worlds";
 
 inline constexpr char kAxeTexture[] = "Assets/Textures/Items/axe.png";
 inline constexpr char kPickaxeTexture[] = "Assets/Textures/Items/pickaxe.png";

@@ -72,6 +72,8 @@
     <ClCompile Include="src\Renderer\render\hud\hud_inventory_menu.cpp" />
     <ClCompile Include="src\Renderer\render\hud\hud_panel.cpp" />
     <ClCompile Include="src\Renderer\render\hud\hud_portal_info.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud_portal_tracker.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud_world_launcher.cpp" />
     <ClCompile Include="src\Renderer\render\hud\hud_text.cpp" />
     <ClCompile Include="src\Renderer\render\hud\hud_watch_text.cpp" />
     <ClCompile Include="src\Core\runtime\game_chat.cpp" />
@@ -80,6 +82,7 @@
     <ClCompile Include="src\Core\runtime\runtime_app.cpp" />
     <ClCompile Include="src\Core\runtime\runtime_app_bootstrap.cpp" />
     <ClCompile Include="src\Core\runtime\runtime_app_loop.cpp" />
+    <ClCompile Include="src\Core\runtime\world_launcher.cpp" />
     <ClCompile Include="src\Core\runtime\runtime_ui_common.cpp" />
     <ClCompile Include="src\Core\runtime\runtime_ui_hud.cpp" />
     <ClCompile Include="src\Core\runtime\runtime_ui.cpp" />
@@ -89,6 +92,7 @@
     <ClCompile Include="src\World\world\world_spawn_locator.cpp" />
     <ClCompile Include="src\World\world\world_stack.cpp" />
     <ClCompile Include="src\World\world\world_stack_persistence.cpp" />
+    <ClCompile Include="src\World\world\world_save_service.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Core\config\client_assets.hpp" />
@@ -119,6 +123,8 @@
     <ClInclude Include="src\Renderer\render\hud\hud_inventory_menu.hpp" />
     <ClInclude Include="src\Renderer\render\hud\hud_panel.hpp" />
     <ClInclude Include="src\Renderer\render\hud\hud_portal_info.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_portal_tracker.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_world_launcher.hpp" />
     <ClInclude Include="src\Renderer\render\hud\hud_text.hpp" />
     <ClInclude Include="src\Renderer\render\hud\hud_watch_text.hpp" />
     <ClInclude Include="src\Renderer\render\hud_3d_preview.hpp" />
@@ -136,6 +142,7 @@
     <ClInclude Include="src\Core\runtime\runtime_hud_ids.hpp" />
     <ClInclude Include="src\Core\runtime\runtime_ui_internal.hpp" />
     <ClInclude Include="src\Core\runtime\runtime_ui.hpp" />
+    <ClInclude Include="src\Core\runtime\world_launcher.hpp" />
     <ClInclude Include="src\UI\ui\biome_teleport_window.hpp" />
     <ClInclude Include="src\UI\ui\imgui_layer.hpp" />
     <ClInclude Include="src\World\world\biome.hpp" />
@@ -152,6 +159,7 @@
     <ClInclude Include="src\World\world\world_generator.hpp" />
     <ClInclude Include="src\World\world\world_spawn_locator.hpp" />
     <ClInclude Include="src\World\world\world_stack.hpp" />
+    <ClInclude Include="src\World\world\world_save_service.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\UI\ui\imgui_layer.cpp" />

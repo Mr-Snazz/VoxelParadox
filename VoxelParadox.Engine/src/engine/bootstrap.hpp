@@ -30,7 +30,7 @@ struct Config {
   ENGINE::VIEWPORTMODE viewportMode = ENGINE::VIEWPORTMODE::BORDERLESS;
   std::string defaultFontPath = "Assets/Fonts/Minecraft.ttf";
   bool vSyncEnabled = false;
-  std::string saveDirectory = "Saves/Worlds";
+  std::string saveDirectory = "Saves/worlds";
   std::vector<std::string> requiredAssetFiles{
       "Assets/Textures/Hud/crosshair.png",
       "Assets/Textures/Items/axe.png",

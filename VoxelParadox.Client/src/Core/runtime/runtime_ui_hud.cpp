@@ -6,6 +6,7 @@
 #include "client_assets.hpp"
 #include "client_defaults.hpp"
 #include "engine/bootstrap.hpp"
+#include "render/hotbar_preview_config.hpp"
 #include "runtime/runtime_hud_ids.hpp"
 
 namespace RuntimeUI::Detail {
@@ -23,6 +24,47 @@ HUDLayout makeDebugHUDLayout(int lineIndex) {
 
 HUDLayout makePlayerStatusLayout() {
   return makeHUDLayout(HUDAnchor::BOTTOM_CENTER, glm::vec2(0.0f, -50.0f));
+}
+
+HUDLayout makePortalCooldownLayout() {
+  const HotbarHUDLayout& layout = HUDHotbarPreview::config.layout;
+  const int barWidth =
+      layout.padding.x * 2 +
+      layout.slotSize.x * PlayerHotbar::SLOT_COUNT +
+      layout.slotSpacing * (PlayerHotbar::SLOT_COUNT - 1);
+  const int barHeight = layout.padding.y * 2 + layout.slotSize.y;
+  const float xOffset = static_cast<float>(barWidth) * 0.5f + 42.0f;
+  const float yOffset =
+      -(static_cast<float>(barHeight) * 0.5f + static_cast<float>(layout.offset.y) + 4.0f);
+  return makeHUDLayout(HUDAnchor::BOTTOM_CENTER, glm::vec2(xOffset, yOffset));
+}
+
+HUDLayout makeSaveToastLayout() {
+  return makeHUDLayout(HUDAnchor::BOTTOM_RIGHT, HUDAnchor::BOTTOM_RIGHT,
+                       glm::vec2(-20.0f, -28.0f));
+}
+
+std::string formatPortalCooldownText(const Player& player) {
+  if (player.isInventoryOpen()) {
+    return {};
+  }
+
+  if (player.isSandboxModeEnabled()) {
+    return "Portal: SANDBOX";
+  }
+
+  const double remainingSeconds = player.getUniverseCreationCooldownRemainingSeconds();
+  if (remainingSeconds <= 0.0) {
+    return "Portal: READY";
+  }
+
+  const int totalSeconds = static_cast<int>(std::ceil(remainingSeconds));
+  const int minutes = totalSeconds / 60;
+  const int seconds = totalSeconds % 60;
+
+  char buffer[48];
+  std::snprintf(buffer, sizeof(buffer), "Portal: %02d:%02d", minutes, seconds);
+  return buffer;
 }
 
 }  // namespace
@@ -53,6 +95,12 @@ void createHUDGroups() {
   HUD::createGroup(RuntimeHudIds::kSettingsConfirmMenu,
                    RuntimeHudIds::kSettingsConfirmLayer, false,
                    HUDGroupCategory::MENU);
+  HUD::createGroup(RuntimeHudIds::kPortalTrackerWaypoint,
+                   RuntimeHudIds::kPortalTrackerWaypointLayer);
+  HUD::createGroup(RuntimeHudIds::kPortalTrackerMenu,
+                   RuntimeHudIds::kPortalTrackerMenuLayer, true,
+                   HUDGroupCategory::MENU);
+  HUD::createGroup(RuntimeHudIds::kSaveToast, RuntimeHudIds::kSaveToastLayer);
 }
 #pragma endregion
 
@@ -307,6 +355,64 @@ void addHotbarHUD(Player& player, Renderer& renderer, WorldStack& worldStack) {
       RuntimeHudIds::kHotbar, 2));
   HUD::add(attachToHUDGroup(new hudHotbar(&player, HotbarVisualPart::COUNTS),
                             RuntimeHudIds::kHotbar, 3));
+  if (auto* portalCooldown = attachToHUDGroup(
+          HUD::watchText(
+              [&player](std::string& out) {
+                out = formatPortalCooldownText(player);
+              },
+              makePortalCooldownLayout(), glm::vec2(1.0f), 16, 0.0f),
+          RuntimeHudIds::kHotbar, 4)) {
+    portalCooldown->setVisualBinder(
+        [&player](hudWatchText& watchText) {
+          if (player.isSandboxModeEnabled()) {
+            watchText.setColor(glm::vec3(0.55f, 1.0f, 0.68f));
+            return;
+          }
+
+          if (player.getUniverseCreationCooldownRemainingSeconds() <= 0.0) {
+            watchText.setColor(glm::vec3(1.0f, 0.94f, 0.58f));
+            return;
+          }
+
+          watchText.setColor(glm::vec3(0.78f, 0.84f, 0.94f));
+        });
+    portalCooldown->setColor(glm::vec3(0.78f, 0.84f, 0.94f));
+  }
+}
+#pragma endregion
+
+#pragma region PortalTrackerHUD
+void addPortalTrackerHUD(Player& player, WorldStack& worldStack,
+                         hudPortalTracker*& outPortalTracker) {
+  outPortalTracker = attachToHUDGroup(new hudPortalTracker(&player, &worldStack, 18),
+                                      RuntimeHudIds::kPortalTrackerMenu, 0);
+  if (outPortalTracker) {
+    HUD::add(outPortalTracker);
+  }
+}
+
+void addSaveToastHUD(RuntimeUiState& uiState) {
+  if (auto* toast = attachToHUDGroup(
+          HUD::watchText(
+              [&uiState](std::string& out) {
+                out = uiState.saveToastTimer > 0.0f ? uiState.saveToastText : std::string();
+              },
+              makeSaveToastLayout(), glm::vec2(1.0f), 18, 0.0f),
+          RuntimeHudIds::kSaveToast)) {
+    toast->setColor(glm::vec3(0.80f, 1.0f, 0.86f));
+    toast->setVisualBinder(
+        [&uiState](hudWatchText& watchText) {
+          const float duration = std::max(uiState.saveToastDuration, 0.001f);
+          const float fadeIn = std::max(uiState.saveToastFadeInDuration, 0.001f);
+          const float fadeOut = std::max(uiState.saveToastFadeOutDuration, 0.001f);
+          const float remaining = glm::clamp(uiState.saveToastTimer, 0.0f, duration);
+          const float elapsed = duration - remaining;
+          const float fadeInAlpha = glm::clamp(elapsed / fadeIn, 0.0f, 1.0f);
+          const float fadeOutAlpha = glm::clamp(remaining / fadeOut, 0.0f, 1.0f);
+          watchText.setOpacity(glm::min(fadeInAlpha, fadeOutAlpha));
+          watchText.setColor(glm::vec3(0.80f, 1.0f, 0.86f));
+        });
+  }
 }
 #pragma endregion
 
@@ -315,6 +421,7 @@ void addHotbarHUD(Player& player, Renderer& renderer, WorldStack& worldStack) {
 void addPauseMenuHUD(GLFWwindow* window, RuntimeUiState& uiState,
                      const GameSettings& appliedSettings,
                      GameSettings& pendingSettings) {
+  (void)window;
   HUD::add(attachToHUDGroup(new hudPanel(glm::vec4(0.0f, 0.0f, 0.0f, 0.65f)),
                             RuntimeHudIds::kPauseMenu));
   HUD::add(attachToHUDGroup(
@@ -337,7 +444,7 @@ void addPauseMenuHUD(GLFWwindow* window, RuntimeUiState& uiState,
       new hudButtonText(
           "Exit", makeCenteredMenuButtonPositioner(30.0f), 32, glm::vec3(1.0f),
           glm::vec3(1.0f, 0.4f, 0.4f),
-          [window]() { glfwSetWindowShouldClose(window, true); }),
+          [&uiState]() { uiState.returnToLauncherRequested = true; }),
       RuntimeHudIds::kPauseMenu));
 }
 #pragma endregion
@@ -723,9 +830,15 @@ void syncDebugHudState(const RuntimeUiState& uiState,
                        settings.showFpsCounterOnly && !uiState.debugTextVisible);
 }
 
-void syncCursorVisibility(const Player& player) {
+void syncSaveToastState(const RuntimeUiState& uiState) {
+  HUD::setGroupEnabled(RuntimeHudIds::kSaveToast, uiState.saveToastTimer > 0.0f);
+}
+
+void syncCursorVisibility(const Player& player,
+                          const hudPortalTracker* portalTracker) {
   Input::setCursorVisible(ENGINE::ISPAUSED() || player.isInventoryOpen() ||
-                          Input::hasUiFocus());
+                          Input::hasUiFocus() ||
+                          (portalTracker && portalTracker->isMenuOpen()));
 }
 #pragma endregion
 
@@ -737,7 +850,8 @@ hudPortalInfo* setupHUD(Player& player, WorldStack& worldStack, Renderer& render
                         GameSettings& pendingSettings,
                         const std::vector<std::string>& availableFonts,
                         const std::vector<glm::ivec2>& availableResolutions,
-                        RuntimeUiState& uiState) {
+                        RuntimeUiState& uiState,
+                        hudPortalTracker** outPortalTracker) {
   HUD::setDefaultFont(appliedSettings.fontAssetPath());
 
   Detail::createHUDGroups();
@@ -755,6 +869,9 @@ hudPortalInfo* setupHUD(Player& player, WorldStack& worldStack, Renderer& render
   HUD::add(imgCrosshair);
 
   Detail::addHotbarHUD(player, renderer, worldStack);
+  Detail::addSaveToastHUD(uiState);
+  hudPortalTracker* portalTracker = nullptr;
+  Detail::addPortalTrackerHUD(player, worldStack, portalTracker);
   Detail::addInventoryMenuHUD(player, renderer, worldStack);
   Detail::addPauseMenuHUD(window, uiState, appliedSettings, pendingSettings);
   Detail::addSettingsMenuHUD(player, worldStack, renderer, audioController, appliedSettings,
@@ -764,6 +881,9 @@ hudPortalInfo* setupHUD(Player& player, WorldStack& worldStack, Renderer& render
                                        appliedSettings, pendingSettings, uiState);
   syncHudMenuState(uiState);
   syncDebugHudState(uiState, appliedSettings);
+  if (outPortalTracker) {
+    *outPortalTracker = portalTracker;
+  }
   return portalInfo;
 }
 #pragma endregion

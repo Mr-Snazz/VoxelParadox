@@ -498,4 +498,18 @@ void saveGameSettings(const GameSettings& settings) {
   }
 }
 
+void triggerSaveToast(RuntimeUiState& uiState, const std::string& message) {
+  uiState.saveToastText = message.empty() ? "Game Saved" : message;
+  uiState.saveToastTimer = uiState.saveToastDuration;
+}
+
+void updateSaveToast(RuntimeUiState& uiState, float dt) {
+  if (uiState.saveToastTimer <= 0.0f) {
+    uiState.saveToastTimer = 0.0f;
+    return;
+  }
+
+  uiState.saveToastTimer = std::max(0.0f, uiState.saveToastTimer - dt);
+}
+
 }  // namespace RuntimeUI

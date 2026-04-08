@@ -31,6 +31,7 @@ void INIT(double nowSeconds);
 void UPDATE(double nowSeconds, float dtSeconds);
 
 // Stats / timing
+bool ISINITIALIZED();
 float GETFPS();
 float GETDELTATIME();
 float GETFRAMETIMEMS();

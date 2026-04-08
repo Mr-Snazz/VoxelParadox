@@ -282,6 +282,38 @@ void WorldStack::render(const glm::vec3& renderCameraPos,
     }
 }
 
+std::vector<WorldLevel> WorldStack::snapshotTraversalStack() const {
+    return stack;
+}
+
+bool WorldStack::restoreTraversalStack(const std::vector<WorldLevel>& levels) {
+    if (levels.empty()) {
+        return false;
+    }
+
+    const WorldLevel& rootLevel = levels.front();
+    const bool rootMatches = activeWorld && stack.size() == 1 &&
+                             activeWorld->seed == rootLevel.seed &&
+                             activeWorld->biomeSelection == rootLevel.biomeSelection;
+    if (!rootMatches) {
+        init(rootLevel.seed, rootLevel.biomeSelection, rootLevel.biomePreset);
+    }
+
+    for (std::size_t index = 1; index < levels.size(); index++) {
+        const WorldLevel& level = levels[index];
+        if (!descendInto(level.portalBlock, level.returnPosition,
+                         level.returnOrientation, level.portalNormal)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void WorldStack::saveCurrentWorldEdits() {
+    saveActiveToCache();
+}
+
 BiomeSelection WorldStack::getResolvedPortalBiomeSelection(const FractalWorld& world,
                                                            const glm::ivec3& blockPos,
                                                            std::uint32_t childSeed) const {
@@ -295,9 +327,13 @@ BiomeSelection WorldStack::getResolvedPortalBiomeSelection(const FractalWorld& w
 bool WorldStack::ensureNestedWorldAtBlock(
     const glm::ivec3& blockPos, std::uint32_t* outChildSeed,
     BiomeSelection* outChildBiome,
-    std::shared_ptr<const VoxelGame::BiomePreset>* outChildPreset) {
+    std::shared_ptr<const VoxelGame::BiomePreset>* outChildPreset,
+    bool* outCreated) {
     FractalWorld* current = currentWorld();
     if (!current) {
+        if (outCreated) {
+            *outCreated = false;
+        }
         return false;
     }
 
@@ -328,7 +364,19 @@ bool WorldStack::ensureNestedWorldAtBlock(
     if (outChildPreset) {
         *outChildPreset = childBiome.preset;
     }
+    if (outCreated) {
+        *outCreated = createdPortal;
+    }
     return true;
+}
+
+bool WorldStack::hasNestedWorldAtBlock(const glm::ivec3& blockPos) const {
+    const FractalWorld* current = currentWorld();
+    if (!current) {
+        return false;
+    }
+
+    return current->portalBlocks.find(blockPos) != current->portalBlocks.end();
 }
 
 glm::vec3 WorldStack::resolveSpawnPositionForWorld(FractalWorld& world,

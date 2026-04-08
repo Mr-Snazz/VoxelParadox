@@ -1,18 +1,72 @@
-<?xml version="1.0" encoding="UTF-8"?>
+
 <Solution>
   <Configurations>
-    <BuildType Name="Debug" />
-    <BuildType Name="Release" />
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="VoxelParadox.Engine/VoxelParadox.Engine.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f8c2f3c0-3e7a-4e5c-a0d8-1a6b4015e201" />
-  <Project Path="VoxelParadox.Client/VoxelParadox.Client.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="34e045cf-c0e4-4c73-8d8f-b8b3610d8b4a" DefaultStartup="true">
+  <Folder Name="/res/" />
+  <Folder Name="/res/Assets/" />
+  <Folder Name="/res/Assets/Audio/" />
+  <Folder Name="/res/Assets/Audio/Definitions/">
+    <File Path="res/Assets/Audio/Definitions/audio_categories.json" />
+    <File Path="res/Assets/Audio/Definitions/audio_events.json" />
+    <File Path="res/Assets/Audio/Definitions/audio_manifest.json" />
+    <File Path="res/Assets/Audio/Definitions/block_sound_profiles.json" />
+    <File Path="res/Assets/Audio/Definitions/music_contexts.json" />
+  </Folder>
+  <Folder Name="/res/Assets/Recipes/">
+    <File Path="res/Assets/Recipes/recipe_blocks.json" />
+    <File Path="res/Assets/Recipes/recipe_tools.json" />
+  </Folder>
+  <Folder Name="/res/Assets/Shaders/">
+    <File Path="res/Assets/Shaders/block.frag" />
+    <File Path="res/Assets/Shaders/block.vert" />
+    <File Path="res/Assets/Shaders/depth_window.frag" />
+    <File Path="res/Assets/Shaders/depth_window.vert" />
+    <File Path="res/Assets/Shaders/dust_particle.frag" />
+    <File Path="res/Assets/Shaders/dust_particle.vert" />
+    <File Path="res/Assets/Shaders/hud.frag" />
+    <File Path="res/Assets/Shaders/hud.vert" />
+    <File Path="res/Assets/Shaders/item_sprite.frag" />
+    <File Path="res/Assets/Shaders/item_sprite.vert" />
+    <File Path="res/Assets/Shaders/line.frag" />
+    <File Path="res/Assets/Shaders/line.vert" />
+  </Folder>
+  <Folder Name="/res/World/" />
+  <Folder Name="/res/World/BiomesPresets/">
+    <File Path="res/World/BiomesPresets/ancient_mining.fvbiome.json" />
+    <File Path="res/World/BiomesPresets/ancient_ruins.fvbiome.json" />
+    <File Path="res/World/BiomesPresets/does_not_exist.fvbiome.json" />
+    <File Path="res/World/BiomesPresets/expensive.fvbiome.json" />
+    <File Path="res/World/BiomesPresets/inverted_mountains.fvbiome.json" />
+    <File Path="res/World/BiomesPresets/menger_sponge.fvbiome.json" />
+    <File Path="res/World/BiomesPresets/stone_grips.fvbiome.json" />
+    <File Path="res/World/BiomesPresets/waves.fvbiome.json" />
+    <File Path="res/World/BiomesPresets/waves_of_god.fvbiome.json" />
+  </Folder>
+  <Folder Name="/res/World/Modules/">
+    <File Path="res/World/Modules/cave_system.fvmodule.json" />
+    <File Path="res/World/Modules/cellular_noise.fvmodule.json" />
+    <File Path="res/World/Modules/domain_warped_noise.fvmodule.json" />
+    <File Path="res/World/Modules/fractal_noise.fvmodule.json" />
+    <File Path="res/World/Modules/grid_pattern.fvmodule.json" />
+    <File Path="res/World/Modules/menger_sponge.fvmodule.json" />
+    <File Path="res/World/Modules/perlin.fvmodule.json" />
+    <File Path="res/World/Modules/ridged_noise.fvmodule.json" />
+    <File Path="res/World/Modules/vox_import.fvmodule.json" />
+  </Folder>
+  <Folder Name="/tools/">
+    <File Path="tools/delete_world_saves.py" />
+    <File Path="tools/export_release.py" />
+    <File Path="tools/sync_vs_projects.py" />
+  </Folder>
+  <Project Path="VoxelParadox.BiomeMaker/VoxelParadox.BiomeMaker.vcxproj" Id="a8a21d7f-3f63-4c4d-8124-40f4281b0c39">
     <BuildDependency Project="VoxelParadox.Engine/VoxelParadox.Engine.vcxproj" />
   </Project>
-  <Project Path="VoxelParadox.BiomeMaker/VoxelParadox.BiomeMaker.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="a8a21d7f-3f63-4c4d-8124-40f4281b0c39">
+  <Project Path="VoxelParadox.Client/VoxelParadox.Client.vcxproj" Id="34e045cf-c0e4-4c73-8d8f-b8b3610d8b4a">
     <BuildDependency Project="VoxelParadox.Engine/VoxelParadox.Engine.vcxproj" />
   </Project>
-  <Project Path="VoxelParadox.ShaderEditor/VoxelParadox.ShaderEditor.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="c3a971e7-0e2e-47f9-a8d8-457f1a9fa4cb">
+  <Project Path="VoxelParadox.Engine/VoxelParadox.Engine.vcxproj" Id="f8c2f3c0-3e7a-4e5c-a0d8-1a6b4015e201" />
+  <Project Path="VoxelParadox.ShaderEditor/VoxelParadox.ShaderEditor.vcxproj" Id="c3a971e7-0e2e-47f9-a8d8-457f1a9fa4cb">
     <BuildDependency Project="VoxelParadox.Engine/VoxelParadox.Engine.vcxproj" />
   </Project>
 </Solution>

@@ -348,6 +348,10 @@ void applyVSync() {
 }
 } // namespace
 
+bool ISINITIALIZED() {
+  return initialized;
+}
+
 void INIT(double nowSeconds) {
   initialized = true;
   nowSecondsCached = nowSeconds;

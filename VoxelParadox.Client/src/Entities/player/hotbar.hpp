@@ -36,6 +36,14 @@ public:
         }
     };
 
+    struct PersistentState {
+        std::array<Slot, TOTAL_STORAGE_SLOTS> storageSlots{};
+        std::array<Slot, CRAFT_SLOT_COUNT> craftSlots{};
+        Slot heldSlot{};
+        int selectedIndex = 0;
+        bool inventoryOpen = false;
+    };
+
     enum class ClickType {
         LEFT = 0,
         RIGHT,
@@ -215,6 +223,8 @@ public:
     // Detalhe: usa 'clickType', 'craftAll' para interpretar a interacao recebida e executar as mudancas necessarias.
     // Retorno: devolve 'bool' para indicar sucesso, presenca, validacao ou qualquer outra condicao relevante produzida pela chamada.
     bool clickCraftResult(ClickType clickType, bool craftAll = false);
+    PersistentState capturePersistentState() const;
+    void applyPersistentState(const PersistentState& state);
 #pragma endregion
 
 #pragma region HotbarPrivateApi

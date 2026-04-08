@@ -363,6 +363,7 @@ BiomeModule BiomeModule::makeImportVoxFiles(const std::string& id) {
       makeBaseModule(id, "Vox Import", ModuleType::IMPORT_VOX_FILES,
                      LayerBlendMode::PLACE_SOLIDS);
   result.importVoxFiles = {};
+  result.importVoxFiles.defaultVoxel = BlockType::STONE;
   return result;
 }
 

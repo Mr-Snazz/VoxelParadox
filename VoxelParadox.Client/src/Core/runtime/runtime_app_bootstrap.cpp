@@ -20,6 +20,7 @@
 // Client
 #include "client_defaults.hpp"
 #include "runtime/runtime_ui.hpp"
+#include "world/world_save_service.hpp"
 #include "world/biome_registry.hpp"
 #include "world/chunk.hpp"
 #include "world/fractal_world.hpp"
@@ -230,21 +231,47 @@ Bootstrap::Config makeBootstrapConfig(const GameSettings& settings) {
   return config;
 }
 
-bool prepareRootWorld(WorldStack& worldStack, uint32_t rootSeed,
-                      const BiomeSelection& rootBiomeSelection,
-                      std::shared_ptr<const VoxelGame::BiomePreset> rootPreset,
-                      const glm::vec3& spawnPosition) {
-  // --- 1. Create Root World ---
-  printBootstrapInfo("Preparing the root world...");
-  worldStack.init(rootSeed, rootBiomeSelection, std::move(rootPreset));
+bool prepareWorldFromSession(
+    WorldStack& worldStack, const WorldSaveService::WorldSession& session,
+    const glm::vec3& fallbackSpawnAnchor, float playerRadius, float standingHeight,
+    float eyeHeight, WorldStack::RenderDistancePreset renderDistancePreset,
+    glm::vec3& outResolvedSpawnPosition) {
+  // --- 1. Create Selected World ---
+  printBootstrapInfo("Preparing the selected world...");
+  WorldStack::setSaveWorldDirectory(session.paths.universesDirectory.string());
+  worldStack.init(session.manifest.rootSeed, session.manifest.rootBiomeSelection,
+                  session.rootPreset);
+  worldStack.setRenderDistancePreset(renderDistancePreset);
 
   FractalWorld* world = worldStack.currentWorld();
   if (!world) {
-    printBootstrapError("Failed to create the root world.");
+    printBootstrapError("Failed to create the world.");
     return false;
   }
 
+  if (!session.playerData.traversalStack.empty()) {
+    if (!worldStack.restoreTraversalStack(session.playerData.traversalStack)) {
+      printBootstrapError("Failed to restore the saved world traversal stack.");
+      return false;
+    }
+    world = worldStack.currentWorld();
+    if (!world) {
+      printBootstrapError("Failed to resolve the active world after restore.");
+      return false;
+    }
+  }
+
+  if (session.hasPlayerData) {
+    outResolvedSpawnPosition = session.playerData.playerState.cameraPosition;
+  } else {
+    outResolvedSpawnPosition = worldStack.resolveCurrentWorldSpawnPosition(
+        fallbackSpawnAnchor, playerRadius, standingHeight, eyeHeight);
+  }
+
+  world->primeImmediateArea(outResolvedSpawnPosition, 1);
+
   // --- 2. Emit Bootstrap Diagnostics ---
+  printBootstrapDetail("World Name:", session.manifest.displayName);
   printBootstrapDetail("World Seed:", std::to_string(world->seed));
   printBootstrapDetail("World Biome:", worldStack.currentBiomeName());
   printBootstrapDetail("World Depth:", std::to_string(worldStack.currentDepth()));
@@ -253,7 +280,7 @@ bool prepareRootWorld(WorldStack& worldStack, uint32_t rootSeed,
 
   // --- 3. Validate Spawn Chunk Shell ---
   const RootWorldChunkCheck chunkCheck =
-      verifyRootWorldChunks(*world, spawnPosition, 1);
+      verifyRootWorldChunks(*world, outResolvedSpawnPosition, 1);
   printBootstrapDetail("Spawn Chunk Radius:",
                        std::to_string(chunkCheck.radiusChunks));
   printBootstrapDetail("Spawn Chunks Loaded:",
@@ -266,11 +293,11 @@ bool prepareRootWorld(WorldStack& worldStack, uint32_t rootSeed,
                        chunkCheck.passed ? "OK" : "FAILED");
 
   if (!chunkCheck.passed) {
-    printBootstrapError("Root world chunk generation check failed.");
+    printBootstrapError("World chunk generation check failed.");
     return false;
   }
 
-  printBootstrapSuccess("Root world initialized!");
+  printBootstrapSuccess("World initialized!");
   return true;
 }
 

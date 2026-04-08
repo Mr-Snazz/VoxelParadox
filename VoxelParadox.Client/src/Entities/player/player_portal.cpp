@@ -1,6 +1,7 @@
 #include "player.hpp"
 
 #include "audio/game_audio_controller.hpp"
+#include "engine/engine.hpp"
 
 // Portal and nested-world logic:
 // - portal math
@@ -163,6 +164,40 @@ bool Player::isLookingAtPortal(FractalWorld* world) const {
     return world && hasTarget && world->getBlock(targetBlock) == BlockType::PORTAL;
 }
 
+bool Player::canCreateNestedWorldNow() const {
+    return sandboxModeEnabled || ENGINE::GETTIME() >= nextUniverseCreationTimeSeconds;
+}
+
+void Player::markNestedWorldCreated() {
+    if (sandboxModeEnabled) {
+        return;
+    }
+
+    nextUniverseCreationTimeSeconds =
+        ENGINE::GETTIME() + kUniverseCreationCooldownSeconds;
+}
+
+bool Player::tryPrepareNestedWorld(
+    WorldStack& worldStack, const glm::ivec3& blockPos, std::uint32_t* outChildSeed,
+    BiomeSelection* outChildBiome,
+    std::shared_ptr<const VoxelGame::BiomePreset>* outChildPreset) {
+    const bool alreadyExists = worldStack.hasNestedWorldAtBlock(blockPos);
+    if (!alreadyExists && !canCreateNestedWorldNow()) {
+        return false;
+    }
+
+    bool created = false;
+    if (!worldStack.ensureNestedWorldAtBlock(blockPos, outChildSeed, outChildBiome,
+                                            outChildPreset, &created)) {
+        return false;
+    }
+
+    if (created) {
+        markNestedWorldCreated();
+    }
+    return true;
+}
+
 bool Player::isTouchingPortalBlock(glm::ivec3 portalBlock) const {
     const glm::vec3 blockMin = glm::vec3(portalBlock);
     const glm::vec3 blockMax = blockMin + glm::vec3(1.0f);
@@ -235,8 +270,7 @@ void Player::updateNestedPreview(WorldStack& worldStack, FractalWorld* world, fl
 }
 
 void Player::updatePreviewVisibility(WorldStack& worldStack, bool lookingAtPortal, float dt) {
-    if (lookingAtPortal) {
-        worldStack.ensureNestedWorldAtBlock(targetBlock);
+    if (lookingAtPortal && tryPrepareNestedWorld(worldStack, targetBlock)) {
         const bool previewReloaded = !nestedPreview.active || nestedPreview.fade <= 0.0f;
         const bool portalChanged =
             nestedPreview.block != targetBlock || nestedPreview.normal != targetNormal;
@@ -271,6 +305,12 @@ void Player::preloadNearbyNestedWorld(WorldStack& worldStack, FractalWorld* worl
         if (!nestedPreview.active) {
             worldStack.clearNestedPreviewWorld();
         }
+        return;
+    }
+
+    if (!worldStack.hasNestedWorldAtBlock(targetBlock) &&
+        !tryPrepareNestedWorld(worldStack, targetBlock)) {
+        worldStack.clearNestedPreviewWorld();
         return;
     }
 
@@ -360,7 +400,10 @@ void Player::beginAscendTransition(WorldStack& worldStack) {
 
 void Player::beginNestedEntryTransition(WorldStack& worldStack) {
     BiomeSelection nextBiomeSelection{};
-    worldStack.ensureNestedWorldAtBlock(targetBlock, nullptr, &nextBiomeSelection);
+    if (!tryPrepareNestedWorld(worldStack, targetBlock, nullptr,
+                               &nextBiomeSelection)) {
+        return;
+    }
     beginNestedPreviewFadeIn(targetBlock, targetNormal);
     if (audioController) {
         audioController->onPortalEntered(targetBlock, nextBiomeSelection.presetId);

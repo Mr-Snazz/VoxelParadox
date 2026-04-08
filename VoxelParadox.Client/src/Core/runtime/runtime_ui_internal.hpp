@@ -16,6 +16,7 @@
 #include "render/hud/hud_inventory_menu.hpp"
 #include "render/hud/hud_panel.hpp"
 #include "render/hud/hud_portal_info.hpp"
+#include "render/hud/hud_portal_tracker.hpp"
 #include "render/hud/hud_text.hpp"
 #include "render/hud/hud_watch_text.hpp"
 #include "render/renderer.hpp"
@@ -119,6 +120,7 @@ void addFpsOnlyHUD();
 void addDebugHUD(WorldStack& worldStack, Player& player);
 void addPlayerStatusHUD(Player& player);
 void addHotbarHUD(Player& player, Renderer& renderer, WorldStack& worldStack);
+void addSaveToastHUD(RuntimeUiState& uiState);
 void addPauseMenuHUD(GLFWwindow* window, RuntimeUiState& uiState,
                      const GameSettings& appliedSettings,
                      GameSettings& pendingSettings);
@@ -136,6 +138,8 @@ void addSettingsDiscardConfirmHUD(
     RuntimeUiState& uiState);
 void addInventoryMenuHUD(Player& player, Renderer& renderer,
                          WorldStack& worldStack);
+void addPortalTrackerHUD(Player& player, WorldStack& worldStack,
+                         hudPortalTracker*& outPortalTracker);
 void togglePauseOrCancelPortalEdit(hudPortalInfo* portalInfo);
 
 }  // namespace RuntimeUI::Detail

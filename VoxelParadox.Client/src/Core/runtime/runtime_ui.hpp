@@ -16,6 +16,7 @@ class Player;
 class Renderer;
 class WorldStack;
 class hudPortalInfo;
+class hudPortalTracker;
 
 namespace RuntimeUI {
 
@@ -28,7 +29,13 @@ struct RuntimeUiState {
   bool settingsMenuOpen = false;
   bool settingsDiscardConfirmOpen = false;
   bool hudRebuildRequested = false;
+  bool returnToLauncherRequested = false;
   bool debugTextVisible = false;
+  std::string saveToastText = "Game Saved";
+  float saveToastTimer = 0.0f;
+  float saveToastDuration = 1.75f;
+  float saveToastFadeInDuration = 0.18f;
+  float saveToastFadeOutDuration = 0.32f;
   SettingsMenuTab activeSettingsTab = SettingsMenuTab::General;
   ENGINE::VIEWPORTMODE lastNonFullscreenMode = ENGINE::VIEWPORTMODE::BORDERLESS;
 };
@@ -39,7 +46,12 @@ void saveGameSettings(const GameSettings& settings);
 void syncHudMenuState(RuntimeUiState& uiState);
 void syncDebugHudState(const RuntimeUiState& uiState,
                        const GameSettings& settings);
-void syncCursorVisibility(const Player& player);
+void syncSaveToastState(const RuntimeUiState& uiState);
+void syncCursorVisibility(const Player& player,
+                          const hudPortalTracker* portalTracker = nullptr);
+void triggerSaveToast(RuntimeUiState& uiState,
+                      const std::string& message = "Game Saved");
+void updateSaveToast(RuntimeUiState& uiState, float dt);
 
 hudPortalInfo* setupHUD(Player& player, WorldStack& worldStack, Renderer& renderer,
                         GameAudioController& audioController,
@@ -47,9 +59,12 @@ hudPortalInfo* setupHUD(Player& player, WorldStack& worldStack, Renderer& render
                         GameSettings& pendingSettings,
                         const std::vector<std::string>& availableFonts,
                         const std::vector<glm::ivec2>& availableResolutions,
-                        RuntimeUiState& uiState);
+                        RuntimeUiState& uiState,
+                        hudPortalTracker** outPortalTracker = nullptr);
 
-void handleGlobalShortcuts(hudPortalInfo* portalInfo, WorldStack& worldStack,
+void handleGlobalShortcuts(hudPortalInfo* portalInfo,
+                           hudPortalTracker* portalTracker,
+                           WorldStack& worldStack,
                            Player& player, GameAudioController& audioController,
                            RuntimeUiState& uiState,
                            GameSettings& appliedSettings,

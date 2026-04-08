@@ -258,7 +258,7 @@ void hudText::draw(Shader& shader, int screenWidth, int screenHeight) {
         return;
     }
 
-    shader.setVec4("color", glm::vec4(color, 1.0f));
+    shader.setVec4("color", glm::vec4(color, opacity));
     shader.setInt("isText", 1);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);

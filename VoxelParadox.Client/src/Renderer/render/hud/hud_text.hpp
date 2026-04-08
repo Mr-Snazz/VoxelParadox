@@ -43,10 +43,12 @@ public:
     // Funcao: define 'setColor' no elemento de texto do HUD.
     // Detalhe: usa 'c' para aplicar ao componente o valor ou configuracao recebida.
     void setColor(const glm::vec3& c) { color = c; }
+    void setOpacity(float value) { opacity = value; }
     // Funcao: retorna 'getColor' no elemento de texto do HUD.
     // Detalhe: centraliza a logica necessaria para expor um dado derivado ou um acesso controlado ao estado interno.
     // Retorno: devolve 'const glm::vec3&' para dar acesso direto ao objeto resolvido por esta rotina.
     const glm::vec3& getColor() const { return color; }
+    float getOpacity() const { return opacity; }
     // Funcao: define 'setPosition' no elemento de texto do HUD.
     // Detalhe: usa 'x', 'y' para aplicar ao componente o valor ou configuracao recebida.
     void setPosition(int x, int y) { posX = x; posY = y; useLayout = false; }
@@ -107,6 +109,7 @@ private:
     unsigned int vbo = 0;
     std::shared_ptr<const SharedFontData> sharedFontData;
     glm::vec3 color;
+    float opacity = 1.0f;
 
     // Funcao: carrega 'loadFont' no elemento de texto do HUD.
     // Detalhe: centraliza a logica necessaria para ler dados externos e adapta-los ao formato interno usado pelo jogo.

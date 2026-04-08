@@ -18,8 +18,9 @@ void Player::handleBlockInteraction(WorldStack& worldStack, float dt) {
         (targetType == BlockType::PORTAL || isSolid(targetType));
 
     if (Input::keyPressed(GLFW_KEY_V) && portalActionTarget) {
-        worldStack.ensureNestedWorldAtBlock(targetBlock);
-        beginNestedPreviewFadeIn(targetBlock, targetNormal);
+        if (tryPrepareNestedWorld(worldStack, targetBlock)) {
+            beginNestedPreviewFadeIn(targetBlock, targetNormal);
+        }
     }
 
     if (Input::mouseDown(GLFW_MOUSE_BUTTON_LEFT) && hasTarget) {

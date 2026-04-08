@@ -24,6 +24,36 @@
         "warp_strength": 0.0
       },
       "type": "perlin_terrain"
+    },
+    {
+      "blend_mode": "place_on_air",
+      "display_name": "Vox Import",
+      "enabled": true,
+      "format_version": 1,
+      "id": "vox_import",
+      "settings": {
+        "cell_size": {
+          "x": 10,
+          "z": 10
+        },
+        "color_mapping": "default",
+        "default_voxel": "membrane_weave",
+        "fixed_rotation": 0,
+        "include_subdirectories": true,
+        "infinite_y": true,
+        "jitter": {
+          "x": 24,
+          "z": 24
+        },
+        "max_y": 40,
+        "min_y": -8,
+        "pattern": "random_scatter",
+        "rotation_mode": "random_90",
+        "seed_offset": 0,
+        "source_directory": "Assets/Voxs/waves",
+        "spawn_chance": 0.019999999552965164
+      },
+      "type": "import_vox_files"
     }
   ],
   "preview": {

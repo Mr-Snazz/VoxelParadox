@@ -32,8 +32,10 @@
 #include "player/player.hpp"
 #include "render/hud/hud.hpp"
 #include "render/hud/hud_portal_info.hpp"
+#include "render/hud/hud_portal_tracker.hpp"
 #include "render/renderer.hpp"
 #include "runtime/game_chat.hpp"
+#include "world/world_save_service.hpp"
 #include "runtime/runtime_ui.hpp"
 #include "ui/biome_teleport_window.hpp"
 #include "ui/imgui_layer.hpp"
@@ -43,15 +45,24 @@
 namespace {
 
 bool canCaptureGameplayScreenshot(const Player& player, const GameChat& gameChat,
-                                  hudPortalInfo* portalInfo) {
+                                  hudPortalInfo* portalInfo,
+                                  hudPortalTracker* portalTracker) {
   return !ENGINE::ISPAUSED() && !Input::hasUiFocus() && !player.isInventoryOpen() &&
          !gameChat.isOpen() && player.transition == PlayerTransition::NONE &&
-         (!portalInfo || !portalInfo->isEditing());
+         (!portalInfo || !portalInfo->isEditing()) &&
+         (!portalTracker || !portalTracker->isMenuOpen());
 }
 
 std::filesystem::path makeScreenshotPath() {
-  const std::filesystem::path screenshotDir =
-      AppPaths::savesRoot() / "Screenshots";
+  std::filesystem::path screenshotDir = AppPaths::savesRoot() / "Screenshots";
+  const std::string& saveDirectory = WorldStack::getSaveWorldDirectory();
+  if (!saveDirectory.empty()) {
+    const std::filesystem::path universesDirectory(saveDirectory);
+    const std::filesystem::path worldDirectory = universesDirectory.parent_path();
+    if (!worldDirectory.empty()) {
+      screenshotDir = worldDirectory / "screenshots";
+    }
+  }
   std::error_code ec;
   std::filesystem::create_directories(screenshotDir, ec);
   if (ec) {
@@ -112,15 +123,34 @@ bool captureGameplayScreenshot(GLFWwindow* window) {
   return true;
 }
 
+bool saveCurrentWorldSession(WorldSaveService::WorldSession& worldSession,
+                             Player& player, WorldStack& worldStack,
+                             RuntimeUI::RuntimeUiState& uiState,
+                             double totalPlaytimeSeconds, bool showToast,
+                             std::string* outError = nullptr) {
+  if (!WorldSaveService::saveSession(worldSession, player, worldStack,
+                                     totalPlaytimeSeconds, outError)) {
+    return false;
+  }
+
+  worldSession.totalPlaytimeSeconds = totalPlaytimeSeconds;
+  if (showToast) {
+    RuntimeUI::triggerSaveToast(uiState);
+  }
+  return true;
+}
+
 void updateGame(Player& player, WorldStack& worldStack,
                 GameAudioController& audioController, hudPortalInfo* portalInfo,
+                hudPortalTracker* portalTracker,
                 const GameChat& gameChat, float dt) {
   if (ENGINE::ISPAUSED()) {
     return;
   }
 
   PlayerUpdateMode playerUpdateMode = PlayerUpdateMode::FullGameplay;
-  if (Input::hasUiFocus() || (portalInfo && portalInfo->isEditing())) {
+  if (Input::hasUiFocus() || (portalInfo && portalInfo->isEditing()) ||
+      (portalTracker && portalTracker->isMenuOpen())) {
     playerUpdateMode = PlayerUpdateMode::Frozen;
   } else if (player.isInventoryOpen() || gameChat.isOpen()) {
     playerUpdateMode = PlayerUpdateMode::SimulationOnly;
@@ -197,9 +227,9 @@ GameAudioFrameState buildAudioFrameState(const RuntimeUI::RuntimeUiState& uiStat
 #if defined(VP_ENABLE_DEV_TOOLS)
 void handleDeveloperTools(WorldStack& worldStack, Player& player,
                           hudPortalInfo* portalInfo,
-                          const BiomeSelection& rootBiomeSelection,
+                          const WorldSaveService::WorldSession& worldSession,
                           double currentTime, double lastTime) {
-  BiomeSelection targetBiome = rootBiomeSelection;
+  BiomeSelection targetBiome = worldSession.manifest.rootBiomeSelection;
   if (BiomeTeleportWindow::consumeTeleportRequest(targetBiome)) {
     if (DebugBiomeTools::teleportToBiome(
             worldStack, player, portalInfo, targetBiome, ClientDefaults::kRootSeed,
@@ -217,7 +247,8 @@ void handleDeveloperTools(WorldStack& worldStack, Player& player,
 void rebuildHudIfRequested(Player& player, WorldStack& worldStack, Renderer& renderer,
                            GameAudioController& audioController, GLFWwindow* window,
                            RuntimeAppInternal::RuntimeSettingsBundle& settingsBundle,
-                           GameChat& gameChat, hudPortalInfo*& portalInfo) {
+                           GameChat& gameChat, hudPortalInfo*& portalInfo,
+                           hudPortalTracker*& portalTracker) {
   if (!settingsBundle.uiState.hudRebuildRequested) {
     return;
   }
@@ -227,28 +258,55 @@ void rebuildHudIfRequested(Player& player, WorldStack& worldStack, Renderer& ren
   portalInfo = RuntimeUI::setupHUD(
       player, worldStack, renderer, audioController, window, settingsBundle.applied,
       settingsBundle.pending, settingsBundle.availableFonts,
-      settingsBundle.availableResolutions, settingsBundle.uiState);
+      settingsBundle.availableResolutions, settingsBundle.uiState, &portalTracker);
   gameChat.setupHud();
   gameChat.syncHudState();
-  RuntimeUI::syncCursorVisibility(player);
+  RuntimeUI::syncCursorVisibility(player, portalTracker);
 }
 
 }  // namespace
 
 namespace RuntimeAppInternal {
 
-void runMainLoop(GLFWwindow* window, Renderer& renderer, WorldStack& worldStack,
-                 Player& player, GameAudioController& audioController,
-                 GameChat& gameChat, hudPortalInfo*& portalInfo,
-                 RuntimeSettingsBundle& settingsBundle,
-                 const BiomeSelection& rootBiomeSelection) {
+RuntimeLoopExitReason runMainLoop(GLFWwindow* window, Renderer& renderer,
+                                  WorldStack& worldStack, Player& player,
+                                  GameAudioController& audioController,
+                                  GameChat& gameChat,
+                                  WorldSaveService::WorldSession& worldSession,
+                                  hudPortalInfo*& portalInfo,
+                                  hudPortalTracker*& portalTracker,
+                                  RuntimeSettingsBundle& settingsBundle) {
   // --- 1. Engine Timer Bootstrap ---
   RuntimeDebugFlags debugFlags;
   double lastTime = glfwGetTime();
+  if (!ENGINE::ISINITIALIZED()) {
+    printBootstrapInfo("Starting engine timers...");
+    ENGINE::INIT(lastTime);
+    printBootstrapSuccess("Bootstrap complete!");
+  }
 
-  printBootstrapInfo("Starting engine timers...");
-  ENGINE::INIT(lastTime);
-  printBootstrapSuccess("Bootstrap complete!");
+  double totalPlaytimeSeconds = worldSession.totalPlaytimeSeconds;
+  double lastAutosavePlaytimeSeconds = totalPlaytimeSeconds;
+  std::string autosaveError;
+  const std::uint64_t pauseListenerId = ENGINE::ADDPAUSELISTENER(
+      [&worldSession, &player, &worldStack, &settingsBundle,
+       &totalPlaytimeSeconds, &lastAutosavePlaytimeSeconds, &autosaveError](
+          bool paused) {
+        if (!paused) {
+          return;
+        }
+
+        if (!saveCurrentWorldSession(worldSession, player, worldStack,
+                                     settingsBundle.uiState, totalPlaytimeSeconds,
+                                     true, &autosaveError)) {
+          if (!autosaveError.empty()) {
+            RuntimeAppInternal::printBootstrapError(autosaveError.c_str());
+          }
+          return;
+        }
+
+        lastAutosavePlaytimeSeconds = totalPlaytimeSeconds;
+      });
 
   // --- 2. Main Runtime Loop ---
   while (!glfwWindowShouldClose(window)) {
@@ -262,10 +320,15 @@ void runMainLoop(GLFWwindow* window, Renderer& renderer, WorldStack& worldStack,
     const auto cpuFrameStart = std::chrono::steady_clock::now();
     Input::update();
 
+    if (!ENGINE::ISPAUSED()) {
+      totalPlaytimeSeconds += static_cast<double>(simDt);
+    }
+
     // --- 2.2 UI Commands & Global Shortcuts ---
     const bool allowOpenChat =
         !ENGINE::ISPAUSED() && player.transition == PlayerTransition::NONE &&
         !player.isInventoryOpen() && (!portalInfo || !portalInfo->isEditing()) &&
+        (!portalTracker || !portalTracker->isMenuOpen()) &&
         !Input::hasUiFocus();
     GameChatCommandContext chatCommandContext{
         player,
@@ -278,17 +341,21 @@ void runMainLoop(GLFWwindow* window, Renderer& renderer, WorldStack& worldStack,
         gameChat.handleFrameInput(chatCommandContext, allowOpenChat);
     if (!chatConsumedInput) {
       RuntimeUI::handleGlobalShortcuts(
-          portalInfo, worldStack, player, audioController, settingsBundle.uiState,
+          portalInfo, portalTracker, worldStack, player, audioController,
+          settingsBundle.uiState,
           settingsBundle.applied, settingsBundle.pending);
     }
 
     gameChat.syncHudState();
     RuntimeUI::syncHudMenuState(settingsBundle.uiState);
     RuntimeUI::syncDebugHudState(settingsBundle.uiState, settingsBundle.applied);
-    RuntimeUI::syncCursorVisibility(player);
+    RuntimeUI::updateSaveToast(settingsBundle.uiState, rawDt);
+    RuntimeUI::syncSaveToastState(settingsBundle.uiState);
+    RuntimeUI::syncCursorVisibility(player, portalTracker);
 
     // --- 2.3 Gameplay & Audio ---
-    updateGame(player, worldStack, audioController, portalInfo, gameChat, simDt);
+    updateGame(player, worldStack, audioController, portalInfo, portalTracker,
+               gameChat, simDt);
     audioController.syncFrame(buildListenerState(player),
                               buildAudioFrameState(settingsBundle.uiState, player, worldStack),
                               rawDt);
@@ -303,16 +370,32 @@ void runMainLoop(GLFWwindow* window, Renderer& renderer, WorldStack& worldStack,
         debugFlags
     );
 
+    if (settingsBundle.uiState.returnToLauncherRequested) {
+      break;
+    }
+
     if (Input::keyPressed(GLFW_KEY_F2) &&
-        canCaptureGameplayScreenshot(player, gameChat, portalInfo)) {
+        canCaptureGameplayScreenshot(player, gameChat, portalInfo, portalTracker)) {
       if (!captureGameplayScreenshot(window)) {
         std::printf("[Screenshot] Failed to capture screenshot.\n");
       }
     }
 
+    if (!ENGINE::ISPAUSED() &&
+        totalPlaytimeSeconds - lastAutosavePlaytimeSeconds >= 300.0) {
+      autosaveError.clear();
+      if (saveCurrentWorldSession(worldSession, player, worldStack,
+                                  settingsBundle.uiState, totalPlaytimeSeconds,
+                                  true, &autosaveError)) {
+        lastAutosavePlaytimeSeconds = totalPlaytimeSeconds;
+      } else if (!autosaveError.empty()) {
+        RuntimeAppInternal::printBootstrapError(autosaveError.c_str());
+      }
+    }
+
     // --- 2.5 Developer Tools & Frame Metrics ---
 #if defined(VP_ENABLE_DEV_TOOLS)
-    handleDeveloperTools(worldStack, player, portalInfo, rootBiomeSelection, currentTime,
+    handleDeveloperTools(worldStack, player, portalInfo, worldSession, currentTime,
                          lastTime);
 #endif
 
@@ -326,16 +409,31 @@ void runMainLoop(GLFWwindow* window, Renderer& renderer, WorldStack& worldStack,
     glfwSwapBuffers(window);
 
     rebuildHudIfRequested(player, worldStack, renderer, audioController, window,
-                          settingsBundle, gameChat, portalInfo);
+                          settingsBundle, gameChat, portalInfo, portalTracker);
   }
+
+  autosaveError.clear();
+  if (!saveCurrentWorldSession(worldSession, player, worldStack, settingsBundle.uiState,
+                               totalPlaytimeSeconds, false, &autosaveError) &&
+      !autosaveError.empty()) {
+    RuntimeAppInternal::printBootstrapError(autosaveError.c_str());
+  }
+
+  ENGINE::REMPAUSELISTENER(pauseListenerId);
+  const bool returnToLauncher =
+      settingsBundle.uiState.returnToLauncherRequested && !glfwWindowShouldClose(window);
+  settingsBundle.uiState.returnToLauncherRequested = false;
+  ENGINE::SETPAUSED(false);
+  return returnToLauncher ? RuntimeLoopExitReason::ReturnToLauncher
+                          : RuntimeLoopExitReason::QuitGame;
 }
 
 void shutdownGame(GLFWwindow*& window, Renderer& renderer, WorldStack* worldStack) {
   // --- 1. Developer UI Shutdown ---
 #if defined(VP_ENABLE_DEV_TOOLS)
   BiomeTeleportWindow::shutdown();
-  ImGuiLayer::shutdown();
 #endif
+  ImGuiLayer::shutdown();
 
   // --- 2. Gameplay Subsystems ---
   HUD::cleanup();

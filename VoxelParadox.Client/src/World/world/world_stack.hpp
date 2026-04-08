@@ -46,6 +46,13 @@ struct WorldLevel {
 
 class WorldStack {
 public:
+    struct NamedPortalEntry {
+        glm::ivec3 block{0};
+        std::uint32_t childSeed = 0;
+        BiomeSelection childBiome{};
+        std::string universeName;
+    };
+
     enum class RenderDistancePreset {
         SHORT,
         NORMAL,
@@ -103,13 +110,19 @@ public:
                 const glm::vec3& cullingCameraPos,
                 const glm::mat4& cullingViewProjection);
 
+    std::vector<WorldLevel> snapshotTraversalStack() const;
+    bool restoreTraversalStack(const std::vector<WorldLevel>& levels);
+    void saveCurrentWorldEdits();
+
     BiomeSelection getResolvedPortalBiomeSelection(const FractalWorld& world,
                                                    const glm::ivec3& blockPos,
                                                    std::uint32_t childSeed) const;
     bool ensureNestedWorldAtBlock(
         const glm::ivec3& blockPos, std::uint32_t* outChildSeed = nullptr,
         BiomeSelection* outChildBiome = nullptr,
-        std::shared_ptr<const VoxelGame::BiomePreset>* outChildPreset = nullptr);
+        std::shared_ptr<const VoxelGame::BiomePreset>* outChildPreset = nullptr,
+        bool* outCreated = nullptr);
+    bool hasNestedWorldAtBlock(const glm::ivec3& blockPos) const;
     glm::vec3 resolveCurrentWorldSpawnPosition(const glm::vec3& spawnAnchor,
                                                float playerRadius,
                                                float bodyHeight,
@@ -127,6 +140,7 @@ public:
     void setUniverseName(std::uint32_t seed, const BiomeSelection& biomeSelection,
                          const std::string& name);
     bool deleteUniverseAtPortal(const glm::ivec3& portalBlock);
+    std::vector<NamedPortalEntry> listNamedPortalsInCurrentWorld();
 
     // Global cache mirrors serialized world edits.
     std::unordered_map<std::string, WorldEdits> globalCache;

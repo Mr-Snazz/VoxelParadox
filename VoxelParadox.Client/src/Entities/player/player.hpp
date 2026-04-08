@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <cstdint>
 
 // External
 #include <glm/glm.hpp>
@@ -34,6 +35,7 @@ class GameAudioController;
 
 class Player {
 public:
+    static constexpr double kUniverseCreationCooldownSeconds = 600.0;
     static constexpr float kDefaultWalkSpeed = 4.317f;
     static constexpr float kDefaultRunSpeed = 5.612f;
     static constexpr float kDefaultCrouchSpeed = 1.295f;
@@ -109,6 +111,27 @@ public:
         float pitchMax = 1.03f;
         float phaseOffsetDegrees = 0.0f;
         float minSpeed = 0.35f;
+    };
+
+    struct PersistentState {
+        glm::vec3 cameraPosition{0.0f};
+        glm::quat cameraOrientation{1.0f, 0.0f, 0.0f, 0.0f};
+        glm::vec3 velocity{0.0f};
+        int lifePoints = 20;
+        bool sandboxModeEnabled = false;
+        double universeCreationCooldownRemainingSeconds = 0.0;
+        bool grounded = false;
+        bool crouching = false;
+        float currentEyeHeight = kDefaultStandingEyeHeight;
+        float headBobPhase = 0.0f;
+        float headBobBlend = 0.0f;
+        glm::vec3 headBobLocalOffset{0.0f};
+        float headBobRollRadians = 0.0f;
+        float lastFootstepPhase = 0.0f;
+        float damageRollTimer = 0.0f;
+        float damageRollRadiansCurrent = 0.0f;
+        float lifeFlashTimer = 0.0f;
+        PlayerHotbar::PersistentState hotbarState{};
     };
 
     // Runtime state used directly by rendering, input, and debug HUD.
@@ -188,6 +211,9 @@ public:
     float getStandingHeight() const { return standingHeight; }
     bool isGrounded() const { return grounded; }
     bool isCrouching() const { return crouching; }
+    bool isSandboxModeEnabled() const { return sandboxModeEnabled; }
+    void setSandboxModeEnabled(bool enabled) { sandboxModeEnabled = enabled; }
+    double getUniverseCreationCooldownRemainingSeconds() const;
     void applyDamage(int damagePoints);
     glm::vec3 getLifeTextColor() const;
 
@@ -278,6 +304,8 @@ public:
     }
 
     void clearHotbar() { hotbar.clear(); }
+    PersistentState capturePersistentState() const;
+    void applyPersistentState(const PersistentState& state);
 
     // Portal preview camera construction is public because rendering/debug code uses it.
     static Camera buildNestedPreviewCamera(const Camera& source,
@@ -314,6 +342,8 @@ private:
     glm::vec3 headBobLocalOffset{0.0f};
     float headBobRollRadians = 0.0f;
     float lastFootstepPhase = 0.0f;
+    bool sandboxModeEnabled = false;
+    double nextUniverseCreationTimeSeconds = 0.0;
 
     // Portal math helpers.
     static float smoothstep01(float t);
@@ -369,6 +399,13 @@ private:
                                                  glm::ivec3 block, glm::ivec3 normal);
     void setNestedPreviewOverrideFrame(const NestedPreviewFrame& frame);
     bool isLookingAtPortal(FractalWorld* world) const;
+    bool canCreateNestedWorldNow() const;
+    void markNestedWorldCreated();
+    bool tryPrepareNestedWorld(WorldStack& worldStack, const glm::ivec3& blockPos,
+                               std::uint32_t* outChildSeed = nullptr,
+                               BiomeSelection* outChildBiome = nullptr,
+                               std::shared_ptr<const VoxelGame::BiomePreset>* outChildPreset =
+                                   nullptr);
     void handleTransition(float dt, WorldStack& worldStack);
     void finishDiveIn(WorldStack& worldStack);
     void updateNestedPreview(WorldStack& worldStack, FractalWorld* world, float dt);

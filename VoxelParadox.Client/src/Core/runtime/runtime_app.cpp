@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <memory>
-#include <stdexcept>
 #include <string>
 
 // Third-party
@@ -15,7 +14,6 @@
 
 // Internal - Config & Base
 #include "client_defaults.hpp"
-#include "path/app_paths.hpp"
 #include "engine/bootstrap.hpp"
 #include "engine/engine.hpp"
 
@@ -23,16 +21,19 @@
 #include "runtime/runtime_app.hpp"
 #include "runtime/runtime_app_internal.hpp"
 #include "runtime/game_chat.hpp"
+#include "runtime/world_launcher.hpp"
 #include "player/player.hpp"
 
 // Internal - World & Audio
 #include "world/biome_registry.hpp"
+#include "world/world_save_service.hpp"
 #include "world/world_stack.hpp"
 #include "audio/game_audio_controller.hpp"
 
 // Internal - Rendering & UI
 #include "render/renderer.hpp"
 #include "render/hud/hud.hpp"
+#include "render/hud/hud_portal_tracker.hpp"
 #include "ui/biome_teleport_window.hpp"
 #include "ui/imgui_layer.hpp"
 
@@ -47,12 +48,17 @@ namespace {
     }
 
     Player preparePlayer(const GameSettings& settings,
-                         const glm::vec3& resolvedSpawnPosition) {
+                         const glm::vec3& resolvedSpawnPosition,
+                         const WorldSaveService::WorldSession& worldSession) {
         RuntimeAppInternal::printBootstrapInfo("Preparing the player...");
 
         Player player;
         player.camera.position = resolvedSpawnPosition;
         player.camera.sensitivity = settings.mouseSensitivity;
+        if (worldSession.hasPlayerData) {
+            player.applyPersistentState(worldSession.playerData.playerState);
+            player.camera.sensitivity = settings.mouseSensitivity;
+        }
 
         char spawnBuffer[64];
         std::snprintf(spawnBuffer, sizeof(spawnBuffer), "%.2f, %.2f, %.2f",
@@ -67,19 +73,30 @@ namespace {
 
     void initializeDeveloperUi(GLFWwindow* window, const BiomeSelection& rootBiomeSelection) {
 #if defined(VP_ENABLE_DEV_TOOLS)
-        const bool imguiInitialized = ImGuiLayer::initialize(window);
-        Bootstrap::reportImGuiStatus(imguiInitialized);
-
-        if (!imguiInitialized) {
-            throw std::runtime_error("ImGui initialization failed.");
-        }
-
+        (void)window;
         BiomeTeleportWindow::setAvailableBiomes(BiomeRegistry::instance().buildSelectableBiomes());
         BiomeTeleportWindow::setSelectedBiome(rootBiomeSelection);
 #else
         (void)window;
         (void)rootBiomeSelection;
 #endif
+    }
+
+    void resetUiStateForLauncher(RuntimeAppInternal::RuntimeSettingsBundle& settingsBundle) {
+        settingsBundle.uiState.settingsMenuOpen = false;
+        settingsBundle.uiState.settingsDiscardConfirmOpen = false;
+        settingsBundle.uiState.hudRebuildRequested = false;
+        settingsBundle.uiState.returnToLauncherRequested = false;
+        settingsBundle.uiState.saveToastTimer = 0.0f;
+    }
+
+    void cleanupGameplaySession(WorldStack& worldStack,
+                                RuntimeAppInternal::RuntimeSettingsBundle& settingsBundle) {
+        ENGINE::SETPAUSED(false);
+        HUD::setVisible(true);
+        HUD::clear();
+        worldStack.shutdown();
+        resetUiStateForLauncher(settingsBundle);
     }
 
 } // namespace
@@ -106,11 +123,13 @@ namespace VoxelParadox {
         if (!RuntimeAppInternal::loadRequiredBiomePresets(rootBiomeSelection, rootBiomePreset)) {
             return -1;
         }
+        (void)rootBiomePreset;
 
-        // --- 3. Window & Graphics Context ---
+        // --- 3. Window, Graphics Context, and UI Bootstrap ---
         Renderer renderer;
         GLFWwindow* window = nullptr;
-        const Bootstrap::Config bootstrapConfig = RuntimeAppInternal::makeBootstrapConfig(settingsBundle.applied);
+        const Bootstrap::Config bootstrapConfig =
+            RuntimeAppInternal::makeBootstrapConfig(settingsBundle.applied);
 
         if (!Bootstrap::initialize(bootstrapConfig, window)) {
             return -1;
@@ -122,80 +141,114 @@ namespace VoxelParadox {
         }
         renderer.setRenderScale(settingsBundle.applied.renderScale);
 
+        const bool imguiInitialized = ImGuiLayer::initialize(window);
+        Bootstrap::reportImGuiStatus(imguiInitialized);
+        if (!imguiInitialized) {
+            RuntimeAppInternal::shutdownGame(window, renderer, nullptr);
+            return -1;
+        }
+
+        ENGINE::INIT(glfwGetTime());
         if (!HUD::init()) {
+            RuntimeAppInternal::printBootstrapError("Failed to initialize the HUD.");
             RuntimeAppInternal::shutdownGame(window, renderer, nullptr);
             return -1;
         }
 
-        // --- 4. UI & Developer Tools ---
-        try {
-            initializeDeveloperUi(window, rootBiomeSelection);
+        // --- 4. Launcher <-> Gameplay Session Loop ---
+        while (!glfwWindowShouldClose(window)) {
+            resetUiStateForLauncher(settingsBundle);
+            HUD::setDefaultFont(settingsBundle.applied.fontAssetPath());
+
+            WorldSaveService::WorldSession worldSession;
+            std::string launcherError;
+            const WorldLauncher::RunResult launcherResult =
+                WorldLauncher::run(window, rootBiomeSelection, worldSession,
+                                   &launcherError);
+            if (launcherResult == WorldLauncher::RunResult::ExitGame) {
+                break;
+            }
+            if (launcherResult == WorldLauncher::RunResult::Error) {
+                if (!launcherError.empty()) {
+                    RuntimeAppInternal::printBootstrapError(launcherError.c_str());
+                }
+                RuntimeAppInternal::shutdownGame(window, renderer, nullptr);
+                return -1;
+            }
+
+            try {
+                initializeDeveloperUi(window, worldSession.manifest.rootBiomeSelection);
+            } catch (const std::exception&) {
+                RuntimeAppInternal::shutdownGame(window, renderer, nullptr);
+                return -1;
+            }
+
+            // --- 5. World & Player Setup ---
+            WorldStack worldStack;
+            glm::vec3 resolvedSpawnPosition = ClientDefaults::kPlayerSpawnPosition;
+            if (!RuntimeAppInternal::prepareWorldFromSession(
+                    worldStack, worldSession, ClientDefaults::kPlayerSpawnPosition,
+                    Player::kDefaultPlayerRadius, Player::kDefaultStandingHeight,
+                    Player::kDefaultStandingEyeHeight, settingsBundle.applied.renderDistance,
+                    resolvedSpawnPosition)) {
+                RuntimeAppInternal::shutdownGame(window, renderer, &worldStack);
+                return -1;
+            }
+
+            Player player = preparePlayer(settingsBundle.applied, resolvedSpawnPosition,
+                                          worldSession);
+
+            // --- 6. Audio Subsystem ---
+            RuntimeAppInternal::printBootstrapInfo("Preparing the audio subsystem...");
+
+            ENGINE::AUDIO::AudioManager audioManager;
+            std::string audioStatusMessage;
+            audioManager.initialize({}, &audioStatusMessage);
+
+            GameAudioController audioController(audioManager);
+            audioController.applySettings(settingsBundle.applied.audioSettings);
+            player.setAudioController(&audioController);
+
+            RuntimeAppInternal::printBootstrapDetail("Audio Backend:", audioManager.backendReady() ? "OpenAL" : "Silent");
+            if (!audioStatusMessage.empty()) {
+                RuntimeAppInternal::printBootstrapDetail("Audio Status:", audioStatusMessage);
+            }
+            RuntimeAppInternal::printBootstrapSuccess("Audio initialized!");
+
+            // --- 7. HUD & Social Systems ---
+            RuntimeAppInternal::printBootstrapInfo("Preparing the HUD...");
+            HUD::clear();
+
+            GameChat gameChat;
+            hudPortalTracker* portalTracker = nullptr;
+            hudPortalInfo* portalInfo = RuntimeUI::setupHUD(
+                player, worldStack, renderer, audioController, window,
+                settingsBundle.applied, settingsBundle.pending,
+                settingsBundle.availableFonts, settingsBundle.availableResolutions,
+                settingsBundle.uiState, &portalTracker
+            );
+
+            gameChat.setupHud();
+            gameChat.syncHudState();
+            RuntimeAppInternal::printBootstrapSuccess("HUD initialized!");
+
+            // --- 8. Main Loop ---
+            const RuntimeAppInternal::RuntimeLoopExitReason loopExit =
+                RuntimeAppInternal::runMainLoop(
+                    window, renderer, worldStack, player,
+                    audioController, gameChat, worldSession, portalInfo, portalTracker,
+                    settingsBundle
+                );
+
+            cleanupGameplaySession(worldStack, settingsBundle);
+            if (loopExit == RuntimeAppInternal::RuntimeLoopExitReason::ReturnToLauncher) {
+                continue;
+            }
+
+            break;
         }
-        catch (const std::exception&) {
-            RuntimeAppInternal::shutdownGame(window, renderer, nullptr);
-            return -1;
-        }
 
-        // --- 5. World & Player Setup ---
-        WorldStack worldStack;
-        worldStack.setRenderDistancePreset(settingsBundle.applied.renderDistance);
-        WorldStack::setSaveWorldDirectory(AppPaths::resolveString(bootstrapConfig.saveDirectory));
-
-        if (!RuntimeAppInternal::prepareRootWorld(
-            worldStack, ClientDefaults::kRootSeed, rootBiomeSelection,
-            rootBiomePreset, ClientDefaults::kPlayerSpawnPosition)) {
-            RuntimeAppInternal::shutdownGame(window, renderer, &worldStack);
-            return -1;
-        }
-
-        const glm::vec3 resolvedSpawnPosition =
-            worldStack.resolveCurrentWorldSpawnPosition(
-                ClientDefaults::kPlayerSpawnPosition,
-                Player::kDefaultPlayerRadius,
-                Player::kDefaultStandingHeight,
-                Player::kDefaultStandingEyeHeight);
-        Player player = preparePlayer(settingsBundle.applied, resolvedSpawnPosition);
-
-        // --- 6. Audio Subsystem ---
-        RuntimeAppInternal::printBootstrapInfo("Preparing the audio subsystem...");
-
-        ENGINE::AUDIO::AudioManager audioManager;
-        std::string audioStatusMessage;
-        audioManager.initialize({}, &audioStatusMessage);
-
-        GameAudioController audioController(audioManager);
-        audioController.applySettings(settingsBundle.applied.audioSettings);
-        player.setAudioController(&audioController);
-
-        RuntimeAppInternal::printBootstrapDetail("Audio Backend:", audioManager.backendReady() ? "OpenAL" : "Silent");
-        if (!audioStatusMessage.empty()) {
-            RuntimeAppInternal::printBootstrapDetail("Audio Status:", audioStatusMessage);
-        }
-        RuntimeAppInternal::printBootstrapSuccess("Audio initialized!");
-
-        // --- 7. HUD & Social Systems ---
-        RuntimeAppInternal::printBootstrapInfo("Preparing the HUD...");
-
-        GameChat gameChat;
-        hudPortalInfo* portalInfo = RuntimeUI::setupHUD(
-            player, worldStack, renderer, audioController, window,
-            settingsBundle.applied, settingsBundle.pending,
-            settingsBundle.availableFonts, settingsBundle.availableResolutions,
-            settingsBundle.uiState
-        );
-
-        gameChat.setupHud();
-        gameChat.syncHudState();
-        RuntimeAppInternal::printBootstrapSuccess("HUD initialized!");
-
-        // --- 8. Main Loop & Shutdown ---
-        RuntimeAppInternal::runMainLoop(
-            window, renderer, worldStack, player,
-            audioController, gameChat, portalInfo,
-            settingsBundle, rootBiomeSelection
-        );
-
-        RuntimeAppInternal::shutdownGame(window, renderer, &worldStack);
+        RuntimeAppInternal::shutdownGame(window, renderer, nullptr);
         RuntimeAppInternal::terminateRuntimeProcess(0);
 
         return 0; // Adicionado retorno padrÃ£o de sucesso

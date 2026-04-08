@@ -161,6 +161,7 @@ struct ImportVoxFilesModule {
   float spawnChance = 0.25f;
   VoxRotationMode rotationMode = VoxRotationMode::RANDOM_90;
   int fixedRotation = 0;
+  BlockType defaultVoxel = BlockType::STONE;
   VoxColorMapping colorMapping = VoxColorMapping::DEFAULT;
   std::uint32_t seedOffset = 0;
 };

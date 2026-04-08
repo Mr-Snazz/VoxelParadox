@@ -6,6 +6,7 @@
 #include <glm/gtc/constants.hpp>
 
 #include "audio/game_audio_controller.hpp"
+#include "engine/engine.hpp"
 
 // Player core:
 // - lifetime/setup
@@ -27,6 +28,14 @@ Player::Player() {
     camera.position = glm::vec3(8.0f, 40.0f, 8.0f);
 	camera.baseFov = normalFov;
     hotbar.clear();
+}
+
+double Player::getUniverseCreationCooldownRemainingSeconds() const {
+    if (sandboxModeEnabled) {
+        return 0.0;
+    }
+
+    return glm::max(0.0, nextUniverseCreationTimeSeconds - ENGINE::GETTIME());
 }
 
 void Player::applyDamage(int damagePoints) {
@@ -55,6 +64,60 @@ glm::vec3 Player::getLifeTextColor() const {
         progress * glm::pi<float>() * static_cast<float>(kLifeFlashPulseCount * 2));
     const float flashIntensity = glm::clamp(flashWave, 0.0f, 1.0f);
     return glm::mix(kLifeTextBaseColor, glm::vec3(1.0f), flashIntensity);
+}
+
+Player::PersistentState Player::capturePersistentState() const {
+    PersistentState state;
+    state.cameraPosition = camera.position;
+    state.cameraOrientation = camera.orientation;
+    state.velocity = velocity;
+    state.lifePoints = lifePoints;
+    state.sandboxModeEnabled = sandboxModeEnabled;
+    state.universeCreationCooldownRemainingSeconds =
+        getUniverseCreationCooldownRemainingSeconds();
+    state.grounded = grounded;
+    state.crouching = crouching;
+    state.currentEyeHeight = currentEyeHeight;
+    state.headBobPhase = headBobPhase;
+    state.headBobBlend = headBobBlend;
+    state.headBobLocalOffset = headBobLocalOffset;
+    state.headBobRollRadians = headBobRollRadians;
+    state.lastFootstepPhase = lastFootstepPhase;
+    state.damageRollTimer = damageRollTimer;
+    state.damageRollRadiansCurrent = damageRollRadiansCurrent;
+    state.lifeFlashTimer = lifeFlashTimer;
+    state.hotbarState = hotbar.capturePersistentState();
+    return state;
+}
+
+void Player::applyPersistentState(const PersistentState& state) {
+    camera.position = state.cameraPosition;
+    camera.orientation = state.cameraOrientation;
+    velocity = state.velocity;
+    lifePoints = glm::clamp(state.lifePoints, 0, kMaxLifePoints);
+    sandboxModeEnabled = state.sandboxModeEnabled;
+    nextUniverseCreationTimeSeconds =
+        ENGINE::GETTIME() + glm::max(0.0, state.universeCreationCooldownRemainingSeconds);
+    grounded = state.grounded;
+    crouching = state.crouching;
+    currentEyeHeight = glm::clamp(state.currentEyeHeight,
+                                   kDefaultCrouchingEyeHeight,
+                                   kDefaultStandingEyeHeight);
+    headBobPhase = state.headBobPhase;
+    headBobBlend = glm::clamp(state.headBobBlend, 0.0f, 1.0f);
+    headBobLocalOffset = state.headBobLocalOffset;
+    headBobRollRadians = state.headBobRollRadians;
+    lastFootstepPhase = state.lastFootstepPhase;
+    damageRollTimer = glm::max(0.0f, state.damageRollTimer);
+    damageRollRadiansCurrent = state.damageRollRadiansCurrent;
+    lifeFlashTimer = glm::max(0.0f, state.lifeFlashTimer);
+    hotbar.applyPersistentState(state.hotbarState);
+    transition = PlayerTransition::NONE;
+    transitionTimer = 0.0f;
+    clearNestedPreview();
+    resetBlockBreaking();
+    clearTargetSelection();
+    applyCameraVisualEffects();
 }
 
 void Player::triggerDamageFeedback() {

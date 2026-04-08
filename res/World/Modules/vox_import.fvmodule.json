@@ -23,6 +23,7 @@
     "spawn_chance": 0.25,
     "rotation_mode": "random_90",
     "fixed_rotation": 0,
+    "default_voxel": "stone",
     "color_mapping": "default",
     "seed_offset": 0
   }

@@ -11,6 +11,7 @@
 #include <cmath>
 #include <filesystem>
 #include <limits>
+#include <optional>
 
 #include "path/app_paths.hpp"
 #include "world/noise.hpp"
@@ -114,7 +115,11 @@ PresetModuleGeneratorSource::PresetModuleGeneratorSource(
 
     for (const std::string& file : runtime.files) {
       const VoxStructureData* structure =
-          loadVoxStructure(file, module.importVoxFiles.colorMapping);
+          loadVoxStructure(
+              file, module.importVoxFiles.colorMapping,
+              module.importVoxFiles.colorMapping == VoxColorMapping::DEFAULT
+                  ? std::optional<BlockType>(module.importVoxFiles.defaultVoxel)
+                  : std::nullopt);
       if (!structure) {
         continue;
       }
@@ -1376,7 +1381,11 @@ void PresetModuleGeneratorSource::applyImportVoxLayer(
         const std::string& file =
             runtime.files[state % static_cast<std::uint32_t>(runtime.files.size())];
         const VoxStructureData* structure =
-            loadVoxStructure(file, module.colorMapping);
+            loadVoxStructure(
+                file, module.colorMapping,
+                module.colorMapping == VoxColorMapping::DEFAULT
+                    ? std::optional<BlockType>(module.defaultVoxel)
+                    : std::nullopt);
         if (!structure) {
           continue;
         }

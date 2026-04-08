@@ -190,7 +190,9 @@ void drawDeveloperUi(const WorldStack& worldStack, const Player& player) {
   drawOrientationGizmoOverlay(player);
 }
 
-void handleGlobalShortcuts(hudPortalInfo* portalInfo, WorldStack& worldStack,
+void handleGlobalShortcuts(hudPortalInfo* portalInfo,
+                           hudPortalTracker* portalTracker,
+                           WorldStack& worldStack,
                            Player& player, GameAudioController& audioController,
                            RuntimeUiState& uiState,
                            GameSettings& appliedSettings,
@@ -212,6 +214,10 @@ void handleGlobalShortcuts(hudPortalInfo* portalInfo, WorldStack& worldStack,
   }
 
   if (Input::keyPressed(GLFW_KEY_ESCAPE)) {
+    if (portalTracker && portalTracker->isMenuOpen()) {
+      portalTracker->closeMenu();
+      return;
+    }
     if (uiState.settingsDiscardConfirmOpen) {
       uiState.settingsDiscardConfirmOpen = false;
       return;
@@ -229,6 +235,15 @@ void handleGlobalShortcuts(hudPortalInfo* portalInfo, WorldStack& worldStack,
     if (pausedBefore != ENGINE::ISPAUSED()) {
       audioController.onPauseMenuToggled(ENGINE::ISPAUSED());
     }
+  }
+
+  if (Input::keyPressed(GLFW_KEY_P) && !ENGINE::ISPAUSED() &&
+      player.transition == PlayerTransition::NONE &&
+      !player.isInventoryOpen() &&
+      (!portalInfo || !portalInfo->isEditing()) &&
+      portalTracker) {
+    portalTracker->toggleMenu();
+    return;
   }
 
   if (Input::keyPressed(GLFW_KEY_E) && !ENGINE::ISPAUSED() &&

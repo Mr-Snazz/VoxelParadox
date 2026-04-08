@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -269,6 +270,17 @@ const std::filesystem::path& engineRoot() {
   return g_state.engineRoot;
 }
 
+std::filesystem::path gameDataRoot() {
+#ifdef _WIN32
+    if (const char* localAppData = std::getenv("LOCALAPPDATA")) {
+        if (localAppData[0] != '\0') {
+            return std::filesystem::path(localAppData) / "VoxelParadoxData";
+		}
+    }
+#endif // _WIN32
+	return AppPaths::workspaceRoot() / "VoxelParadoxData";
+}
+
 std::filesystem::path sharedRoot() {
   return resourcesRoot() / "Shared";
 }
@@ -306,11 +318,11 @@ std::filesystem::path voxsRoot() {
 }
 
 std::filesystem::path savesRoot() {
-  return resourcesRoot() / "Saves";
+  return gameDataRoot() / "Saves";
 }
 
 std::filesystem::path saveWorldsRoot() {
-  return savesRoot() / "Worlds";
+  return savesRoot() / "worlds";
 }
 
 std::filesystem::path biomeMakerSavesRoot() {

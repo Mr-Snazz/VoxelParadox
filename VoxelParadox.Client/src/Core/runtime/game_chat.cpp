@@ -82,6 +82,9 @@ std::string displayTextForSuggestion(const std::string& suggestion) {
   if (suggestion == "/summon entity:guy ") {
     return "/summon entity:guy <normal|lookat>";
   }
+  if (suggestion == "/sandbox ") {
+    return "/sandbox [true|false]";
+  }
   if (suggestion == "/debug wireframe ") {
     return "/debug wireframe <true|false>";
   }
@@ -467,9 +470,16 @@ std::vector<std::string> GameChat::autocompleteCandidates() const {
         {"/summon entity:guy normal", "/summon entity:guy lookat"});
   }
 
+  if (normalized == "/sandbox" ||
+      normalized.rfind("/sandbox ", 0) == 0) {
+    return filterByPrefix(
+        {"/sandbox ", "/sandbox true", "/sandbox false"});
+  }
+
   return filterByPrefix({
       "/help",
       "/get ",
+      "/sandbox ",
       "/summon entity:guy ",
       "/debug wireframe ",
       "/debug camera:culling ",
@@ -607,8 +617,18 @@ bool GameChat::executeCommand(GameChatCommandContext& commandContext,
     return executeSummonCommand(commandContext, arguments);
   }
 
+  if (commandName == "sandbox") {
+    const std::size_t argumentsOffset =
+        trimmed.find_first_not_of(" \t", tokens.front().size());
+    const std::string arguments =
+        argumentsOffset == std::string::npos ? std::string{}
+                                             : trimmed.substr(argumentsOffset);
+    return executeSandboxCommand(commandContext, arguments);
+  }
+
   if (commandName == "help") {
     pushHistory("[Debug] /get <item> [amount]");
+    pushHistory("[Debug] /sandbox [true|false]");
     pushHistory("[Debug] /summon entity:guy <normal|lookat>");
     pushHistory("[Debug] /debug wireframe <true|false>");
     pushHistory("[Debug] /debug camera:culling <true|false>");
@@ -761,5 +781,29 @@ bool GameChat::executeSummonCommand(GameChatCommandContext& commandContext,
   }
 
   pushHistory("[Debug] Usage: /summon entity:guy <normal|lookat>");
+  return true;
+}
+
+bool GameChat::executeSandboxCommand(GameChatCommandContext& commandContext,
+                                     const std::string& arguments) {
+  const std::vector<std::string> tokens = splitWhitespace(arguments);
+  if (tokens.empty()) {
+    commandContext.player.setSandboxModeEnabled(true);
+    pushHistory("[Debug] Sandbox enabled. New universes can now be created without cooldown.");
+    return true;
+  }
+
+  bool enabled = false;
+  if (!tryParseBooleanWord(tokens[0], enabled)) {
+    pushHistory("[Debug] Usage: /sandbox [true|false]");
+    return true;
+  }
+
+  commandContext.player.setSandboxModeEnabled(enabled);
+  if (enabled) {
+    pushHistory("[Debug] Sandbox enabled. New universes can now be created without cooldown.");
+  } else {
+    pushHistory("[Debug] Sandbox disabled. New universes are limited to one every 10 minutes.");
+  }
   return true;
 }
