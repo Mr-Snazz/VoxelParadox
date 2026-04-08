@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="18.0">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F8C2F3C0-3E7A-4E5C-A0D8-1A6B4015E201}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>VoxelParadox.Engine</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="..\build\msbuild\VoxelParadox.Initial.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <VpProjectIncludeDirs>$(VpRootDir)VoxelParadox.Engine\src;$(VpRootDir)VoxelParadox.Client\src;$(VpRootDir)VoxelParadox.Client\src\Core;$(VpRootDir)VoxelParadox.Client\src\Core\config;$(VpRootDir)VoxelParadox.Client\src\Core\support;$(VpRootDir)VoxelParadox.Client\src\Systems;$(VpRootDir)VoxelParadox.Client\src\Entities;$(VpRootDir)VoxelParadox.Client\src\Renderer;$(VpRootDir)VoxelParadox.Client\src\UI;$(VpRootDir)VoxelParadox.Client\src\World</VpProjectIncludeDirs>
+    <VpPchHeader>engine\engine_pch.hpp</VpPchHeader>
+  </PropertyGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="..\build\msbuild\VoxelParadox.Settings.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ClCompile Include="src\engine_pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>engine\engine_pch.hpp</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="src\audio\audio_data.cpp" />
+    <ClCompile Include="src\audio\audio_manager.cpp" />
+    <ClCompile Include="src\audio\openal_backend.cpp" />
+    <ClCompile Include="src\engine\bootstrap.cpp" />
+    <ClCompile Include="src\engine\camera.cpp" />
+    <ClCompile Include="src\engine\engine.cpp" />
+    <ClCompile Include="src\engine\graphics_setup.cpp" />
+    <ClCompile Include="src\engine\input.cpp" />
+    <ClCompile Include="src\engine\pause_manager.cpp" />
+    <ClCompile Include="src\engine\meshing\greedy_mesh.cpp" />
+    <ClCompile Include="src\engine\visibility\cluster_occlusion.cpp" />
+    <ClCompile Include="src\engine\visibility\frustum.cpp" />
+    <ClCompile Include="src\path\app_paths.cpp" />
+    <ClCompile Include="src\ui\imgui_layer.cpp" />
+    <ClCompile Include="..\VoxelParadox.Client\src\World\world\biome_preset.cpp" />
+    <ClCompile Include="..\VoxelParadox.Client\src\World\world\biome_preset_defaults.cpp" />
+    <ClCompile Include="..\VoxelParadox.Client\src\World\world\biome_registry.cpp" />
+    <ClCompile Include="..\VoxelParadox.Client\src\World\world\chunk_generator_source.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\audio\audio_data.hpp" />
+    <ClInclude Include="src\audio\audio_manager.hpp" />
+    <ClInclude Include="src\audio\audio_types.hpp" />
+    <ClInclude Include="src\audio\openal_backend.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\biome.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\biome_preset.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\biome_preset_internal.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\biome_registry.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\block.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\chunk.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\chunk_generator_source.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\fractal_world.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\noise.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\vox_asset.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\vox_structure.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\world_generator.hpp" />
+    <ClInclude Include="..\VoxelParadox.Client\src\World\world\world_stack.hpp" />
+    <ClInclude Include="src\engine\bootstrap.hpp" />
+    <ClInclude Include="src\engine\camera.hpp" />
+    <ClInclude Include="src\engine\engine.hpp" />
+    <ClInclude Include="src\engine\engine_pch.hpp" />
+    <ClInclude Include="src\engine\graphics_setup.hpp" />
+    <ClInclude Include="src\engine\input.hpp" />
+    <ClInclude Include="src\engine\pause_manager.hpp" />
+    <ClInclude Include="src\engine\meshing\greedy_mesh.hpp" />
+    <ClInclude Include="src\engine\meshing\mesh_types.hpp" />
+    <ClInclude Include="src\engine\shader.hpp" />
+    <ClInclude Include="src\engine\thread_pool.hpp" />
+    <ClInclude Include="src\engine\visibility\cluster_occlusion.hpp" />
+    <ClInclude Include="src\engine\visibility\frustum.hpp" />
+    <ClInclude Include="src\engine\visibility\visibility_types.hpp" />
+    <ClInclude Include="src\path\app_paths.hpp" />
+    <ClInclude Include="src\ui\imgui_layer.hpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

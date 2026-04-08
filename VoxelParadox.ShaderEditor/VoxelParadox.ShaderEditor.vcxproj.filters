@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="18.0">
+  <ItemGroup>
+    <Filter Include="App">
+      <UniqueIdentifier>{3D316123-41EF-5FB3-A4C7-CD42886093E9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Editor">
+      <UniqueIdentifier>{B0D13934-3193-5C15-9DDD-46FC9025B8AF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Support">
+      <UniqueIdentifier>{AB87E32F-B32D-5A25-B348-F4D9DF9CCE52}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\game_pch.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\main.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="src\editor\block_shader_session.cpp">
+      <Filter>Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\editor\shader_editor_app.cpp">
+      <Filter>Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\editor\shader_editor_renderer.cpp">
+      <Filter>Editor</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\editor\block_shader_session.hpp">
+      <Filter>Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\orbit_camera_controller.hpp">
+      <Filter>Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\shader_editor_app.hpp">
+      <Filter>Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\shader_editor_renderer.hpp">
+      <Filter>Editor</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

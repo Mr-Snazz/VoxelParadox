@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="18.0">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{34E045CF-C0E4-4C73-8D8F-B8B3610D8B4A}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>VoxelParadox.Client</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="..\build\msbuild\VoxelParadox.Initial.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <TargetName>VoxelParadox</TargetName>
+    <VpProjectIncludeDirs>$(VpRootDir)VoxelParadox.Engine\src;$(VpRootDir)VoxelParadox.Client\src;$(VpRootDir)VoxelParadox.Client\src\Core;$(VpRootDir)VoxelParadox.Client\src\Core\config;$(VpRootDir)VoxelParadox.Client\src\Core\support;$(VpRootDir)VoxelParadox.Client\src\Systems;$(VpRootDir)VoxelParadox.Client\src\Entities;$(VpRootDir)VoxelParadox.Client\src\Renderer;$(VpRootDir)VoxelParadox.Client\src\UI;$(VpRootDir)VoxelParadox.Client\src\World</VpProjectIncludeDirs>
+    <VpPchHeader>game_pch.hpp</VpPchHeader>
+    <LocalDebuggerWorkingDirectory>$(VpRootDir)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="..\build\msbuild\VoxelParadox.Settings.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>avrt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Core\support\game_pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>game_pch.hpp</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="src\Systems\audio\game_audio_controller.cpp" />
+    <ClCompile Include="src\Systems\debug\biome_debug_tools.cpp" />
+    <ClCompile Include="src\Entities\enemies\enemy_definition.cpp" />
+    <ClCompile Include="src\Entities\enemies\enemy_spawn_system.cpp" />
+    <ClCompile Include="src\Entities\enemies\enemy_system.cpp" />
+    <ClCompile Include="src\Renderer\entities\fbx_entity_model.cpp" />
+    <ClCompile Include="src\Entities\player\crafting.cpp" />
+    <ClCompile Include="src\Entities\player\hotbar.cpp" />
+    <ClCompile Include="src\Entities\player\player.cpp" />
+    <ClCompile Include="src\Entities\player\player_interaction.cpp" />
+    <ClCompile Include="src\Entities\player\player_movement.cpp" />
+    <ClCompile Include="src\Entities\player\player_portal.cpp" />
+    <ClCompile Include="src\Renderer\render\item_texture_cache.cpp" />
+    <ClCompile Include="src\Renderer\render\obj_block_model.cpp" />
+    <ClCompile Include="src\Renderer\render\renderer.cpp" />
+    <ClCompile Include="src\Renderer\render\renderer_entities.cpp" />
+    <ClCompile Include="src\Renderer\render\renderer_items.cpp" />
+    <ClCompile Include="src\Renderer\render\renderer_portals.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud_button_text.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud_hotbar.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud_image.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud_inventory_menu.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud_panel.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud_portal_info.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud_text.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud_watch_text.cpp" />
+    <ClCompile Include="src\Core\runtime\game_chat.cpp" />
+    <ClCompile Include="src\Core\runtime\game_settings.cpp" />
+    <ClCompile Include="src\Core\runtime\main.cpp" />
+    <ClCompile Include="src\Core\runtime\runtime_app.cpp" />
+    <ClCompile Include="src\Core\runtime\runtime_app_bootstrap.cpp" />
+    <ClCompile Include="src\Core\runtime\runtime_app_loop.cpp" />
+    <ClCompile Include="src\Core\runtime\runtime_ui_common.cpp" />
+    <ClCompile Include="src\Core\runtime\runtime_ui_hud.cpp" />
+    <ClCompile Include="src\Core\runtime\runtime_ui.cpp" />
+    <ClCompile Include="src\UI\ui\biome_teleport_window.cpp" />
+    <ClCompile Include="src\World\world\biome_preset.cpp" />
+    <ClCompile Include="src\World\world\biome_preset_defaults.cpp" />
+    <ClCompile Include="src\World\world\world_spawn_locator.cpp" />
+    <ClCompile Include="src\World\world\world_stack.cpp" />
+    <ClCompile Include="src\World\world\world_stack_persistence.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Core\config\client_assets.hpp" />
+    <ClInclude Include="src\Core\config\client_defaults.hpp" />
+    <ClInclude Include="src\Systems\audio\game_audio_controller.hpp" />
+    <ClInclude Include="src\Systems\debug\biome_debug_tools.hpp" />
+    <ClInclude Include="src\Entities\enemies\enemy_definition.hpp" />
+    <ClInclude Include="src\Entities\enemies\enemy_runtime_helpers.hpp" />
+    <ClInclude Include="src\Entities\enemies\enemy_spawn_system.hpp" />
+    <ClInclude Include="src\Entities\enemies\enemy_system.hpp" />
+    <ClInclude Include="src\Entities\enemies\enemy_types.hpp" />
+    <ClInclude Include="src\Renderer\entities\fbx_entity_model.hpp" />
+    <ClInclude Include="src\Core\support\game_pch.hpp" />
+    <ClInclude Include="src\Entities\items\item_catalog.hpp" />
+    <ClInclude Include="src\Entities\player\crafting.hpp" />
+    <ClInclude Include="src\Entities\player\hotbar.hpp" />
+    <ClInclude Include="src\Entities\player\player.hpp" />
+    <ClInclude Include="src\Renderer\render\dust_particle_config.hpp" />
+    <ClInclude Include="src\Renderer\render\held_block_preview_config.hpp" />
+    <ClInclude Include="src\Renderer\render\hotbar_layout.hpp" />
+    <ClInclude Include="src\Renderer\render\hotbar_preview_config.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_button_text.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_element.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_examples.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_hotbar.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_image.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_inventory_menu.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_panel.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_portal_info.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_text.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_watch_text.hpp" />
+    <ClInclude Include="src\Renderer\render\hud_3d_preview.hpp" />
+    <ClInclude Include="src\Renderer\render\inventory_menu_layout.hpp" />
+    <ClInclude Include="src\Renderer\render\inventory_menu_preview_config.hpp" />
+    <ClInclude Include="src\Renderer\render\item_preview_config.hpp" />
+    <ClInclude Include="src\Renderer\render\item_texture_cache.hpp" />
+    <ClInclude Include="src\Renderer\render\obj_block_model.hpp" />
+    <ClInclude Include="src\Renderer\render\renderer.hpp" />
+    <ClInclude Include="src\Renderer\render\renderer_internal.hpp" />
+    <ClInclude Include="src\Core\runtime\game_chat.hpp" />
+    <ClInclude Include="src\Core\runtime\game_settings.hpp" />
+    <ClInclude Include="src\Core\runtime\runtime_app.hpp" />
+    <ClInclude Include="src\Core\runtime\runtime_app_internal.hpp" />
+    <ClInclude Include="src\Core\runtime\runtime_hud_ids.hpp" />
+    <ClInclude Include="src\Core\runtime\runtime_ui_internal.hpp" />
+    <ClInclude Include="src\Core\runtime\runtime_ui.hpp" />
+    <ClInclude Include="src\UI\ui\biome_teleport_window.hpp" />
+    <ClInclude Include="src\UI\ui\imgui_layer.hpp" />
+    <ClInclude Include="src\World\world\biome.hpp" />
+    <ClInclude Include="src\World\world\biome_preset.hpp" />
+    <ClInclude Include="src\World\world\biome_preset_internal.hpp" />
+    <ClInclude Include="src\World\world\biome_registry.hpp" />
+    <ClInclude Include="src\World\world\block.hpp" />
+    <ClInclude Include="src\World\world\chunk.hpp" />
+    <ClInclude Include="src\World\world\chunk_generator_source.hpp" />
+    <ClInclude Include="src\World\world\fractal_world.hpp" />
+    <ClInclude Include="src\World\world\noise.hpp" />
+    <ClInclude Include="src\World\world\vox_asset.hpp" />
+    <ClInclude Include="src\World\world\vox_structure.hpp" />
+    <ClInclude Include="src\World\world\world_generator.hpp" />
+    <ClInclude Include="src\World\world\world_spawn_locator.hpp" />
+    <ClInclude Include="src\World\world\world_stack.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\UI\ui\imgui_layer.cpp" />
+    <None Include="src\World\world\biome_registry.cpp" />
+    <None Include="src\World\world\chunk_generator_source.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VoxelParadox.Engine\VoxelParadox.Engine.vcxproj">
+      <Project>{F8C2F3C0-3E7A-4E5C-A0D8-1A6B4015E201}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

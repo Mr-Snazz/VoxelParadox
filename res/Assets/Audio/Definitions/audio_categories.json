@@ -1,0 +1,14 @@
+{
+  "categories": [
+    { "id": "master", "label": "Master", "default_volume": 1.0 },
+    { "id": "music", "label": "Music", "default_volume": 0.3 },
+    { "id": "ambient", "label": "Ambient", "default_volume": 0.85 },
+    { "id": "block", "label": "Block", "default_volume": 0.95 },
+    { "id": "player", "label": "Player", "default_volume": 0.95 },
+    { "id": "footsteps", "label": "Footsteps", "default_volume": 0.9 },
+    { "id": "hostile", "label": "Hostile", "default_volume": 0.9 },
+    { "id": "neutral", "label": "Neutral", "default_volume": 0.9 },
+    { "id": "weather", "label": "Weather", "default_volume": 0.85 },
+    { "id": "ui", "label": "UI", "default_volume": 0.9 }
+  ]
+}

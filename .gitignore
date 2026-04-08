@@ -1,0 +1,25 @@
+.vs/
+build/
+artifacts/
+vcpkg_installed/
+
+# Build outputs
+*.exe
+*.dll
+*.pdb
+*.obj
+*.lib
+*.exp
+*.ilk
+*.o
+*.a
+
+# Visual Studio local files
+*.user
+*.vcxproj.user
+*.suo
+*.ipch
+
+# Local app settings
+imgui_biomaker.ini
+imgui_shader_editor.ini

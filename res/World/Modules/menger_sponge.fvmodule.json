@@ -1,0 +1,33 @@
+{
+  "format_version": 1,
+  "id": "menger_sponge",
+  "display_name": "Menger Sponge",
+  "type": "menger_sponge",
+  "enabled": true,
+  "blend_mode": "place_solids",
+  "settings": {
+    "cell_size": {
+      "x": 81,
+      "y": 81,
+      "z": 81
+    },
+    "offset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "iterations": 4,
+    "void_axis_threshold": 2,
+    "invert": false,
+    "infinite_y": false,
+    "min_y": -32,
+    "max_y": 96,
+    "warp_scale": 0.0,
+    "warp_strength": 0.0,
+    "accent_noise_scale": 0.06,
+    "accent_threshold": 0.72,
+    "primary": "stone",
+    "secondary": "organic",
+    "accent": "crystal"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "format_version": 1,
+  "id": "cave_system",
+  "display_name": "Cave System",
+  "type": "cave_system",
+  "enabled": true,
+  "blend_mode": "overwrite_all",
+  "settings": {
+    "root_cell_size": {
+      "x": 96,
+      "y": 64,
+      "z": 96
+    },
+    "offset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "recursion_levels": 4,
+    "subdivision_factor": 2,
+    "tunnel_radius": 6.0,
+    "radius_falloff": 0.58,
+    "chamber_chance": 0.35,
+    "chamber_radius_scale": 1.8,
+    "center_jitter": 0.35,
+    "infinite_y": false,
+    "min_y": -48,
+    "max_y": 80,
+    "warp_scale": 0.03,
+    "warp_strength": 4.0,
+    "accent_noise_scale": 0.07,
+    "accent_threshold": 0.7,
+    "primary": "stone",
+    "secondary": "membrane",
+    "accent": "crystal"
+  }
+}

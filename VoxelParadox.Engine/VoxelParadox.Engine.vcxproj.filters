@@ -1,0 +1,189 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="18.0">
+  <ItemGroup>
+    <Filter Include="Client Shared">
+      <UniqueIdentifier>{B74559A8-C7EC-5BDD-84FC-F0A9FBAC0A79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{4457D04D-B62D-5DBC-9445-D65A89F403E1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Meshing">
+      <UniqueIdentifier>{A7D1B4FC-2D1A-4EA1-BE25-CAFC1A94FD47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Visibility">
+      <UniqueIdentifier>{05DDB794-8F85-45D8-A9E1-93BB83EB1BFC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Audio">
+      <UniqueIdentifier>{B46E9925-0C4B-4D27-A3E8-1C8C7F55FA1A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Path">
+      <UniqueIdentifier>{BC1B81BA-3F05-517B-AB66-AA207EB46AD0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{8282FA91-6285-5C8F-B7D7-759C6CF451F3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Client Shared\World">
+      <UniqueIdentifier>{C3EEF52F-F741-502B-9D1B-0CC4F0D54088}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\engine_pch.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\audio\audio_data.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\audio\audio_manager.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\audio\openal_backend.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\bootstrap.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\camera.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\engine.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\graphics_setup.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\input.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\pause_manager.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\meshing\greedy_mesh.cpp">
+      <Filter>Engine\Meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\visibility\cluster_occlusion.cpp">
+      <Filter>Engine\Visibility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\visibility\frustum.cpp">
+      <Filter>Engine\Visibility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\path\app_paths.cpp">
+      <Filter>Path</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\imgui_layer.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\\VoxelParadox.Client\\src\\World\\world\\biome_preset.cpp">
+      <Filter>Client Shared\World</Filter>
+    </ClCompile>
+    <ClCompile Include="..\\VoxelParadox.Client\\src\\World\\world\\biome_preset_defaults.cpp">
+      <Filter>Client Shared\World</Filter>
+    </ClCompile>
+    <ClCompile Include="..\\VoxelParadox.Client\\src\\World\\world\\biome_registry.cpp">
+      <Filter>Client Shared\World</Filter>
+    </ClCompile>
+    <ClCompile Include="..\\VoxelParadox.Client\\src\\World\\world\\chunk_generator_source.cpp">
+      <Filter>Client Shared\World</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\audio\audio_data.hpp">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\audio\audio_manager.hpp">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\audio\audio_types.hpp">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\audio\openal_backend.hpp">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\biome.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\biome_preset.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\biome_preset_internal.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\biome_registry.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\block.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\chunk.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\chunk_generator_source.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\fractal_world.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\noise.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\vox_asset.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\vox_structure.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\world_generator.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\\VoxelParadox.Client\\src\\World\\world\\world_stack.hpp">
+      <Filter>Client Shared\World</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\bootstrap.hpp">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\camera.hpp">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\engine.hpp">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\engine_pch.hpp">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\graphics_setup.hpp">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\input.hpp">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\pause_manager.hpp">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\meshing\greedy_mesh.hpp">
+      <Filter>Engine\Meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\meshing\mesh_types.hpp">
+      <Filter>Engine\Meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\shader.hpp">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\thread_pool.hpp">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\visibility\cluster_occlusion.hpp">
+      <Filter>Engine\Visibility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\visibility\frustum.hpp">
+      <Filter>Engine\Visibility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\visibility\visibility_types.hpp">
+      <Filter>Engine\Visibility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\path\app_paths.hpp">
+      <Filter>Path</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\imgui_layer.hpp">
+      <Filter>UI</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

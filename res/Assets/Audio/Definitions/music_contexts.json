@@ -1,0 +1,68 @@
+{
+  "contexts": [
+    {
+      "id": "biome.ancient_ruins",
+      "priority": 60,
+      "required_tags": ["state.gameplay", "biome.ancient_ruins"],
+      "start_delay_seconds": 0.0,
+      "silence_seconds": 0.0,
+      "fade_in_seconds": 12.0,
+      "fade_out_seconds": 12.0,
+      "tracks": [
+        { "id": "ruins_01", "path": "Music/ruins_01.wav", "weight": 1.0 }
+      ]
+    },
+    {
+      "id": "biome.waves_of_god",
+      "priority": 50,
+      "required_tags": ["state.gameplay", "biome.waves_of_god"],
+      "start_delay_seconds": 0.0,
+      "silence_seconds": 0.0,
+      "fade_in_seconds": 12.0,
+      "fade_out_seconds": 12.0,
+      "tracks": [
+        { "id": "waves_01", "path": "Music/waves_01.mp3", "weight": 1.0 }
+      ]
+    },
+    {
+      "id": "biome.menger_sponge",
+      "priority": 50,
+      "required_tags": ["state.gameplay", "biome.menger_sponge"],
+      "start_delay_seconds": 0.0,
+      "silence_seconds": 0.0,
+      "fade_in_seconds": 12.0,
+      "fade_out_seconds": 12.0,
+      "tracks": [
+        { "id": "sponge_01", "path": "Music/sponge_01.wav", "weight": 1.0 }
+      ]
+    },
+    {
+      "id": "biome.stone_grips",
+      "priority": 50,
+      "required_tags": ["state.gameplay", "biome.stone_grips"],
+      "start_delay_seconds": 0.0,
+      "silence_seconds": 0.0,
+      "fade_in_seconds": 12.0,
+      "fade_out_seconds": 12.0,
+      "tracks": [
+        { "id": "stone_grips_01", "path": "Music/stone_grips/stone_grips_01.ogg", "weight": 1.0 },
+        { "id": "stone_grips_02", "path": "Music/stone_grips/stone_grips_02.ogg", "weight": 1.0 },
+        { "id": "stone_grips_03", "path": "Music/stone_grips/stone_grips_03.ogg", "weight": 1.0 },
+        { "id": "stone_grips_04", "path": "Music/stone_grips/stone_grips_04.ogg", "weight": 1.0 }
+      ]
+    },
+    {
+      "id": "gameplay.exploration",
+      "priority": 10,
+      "required_tags": ["state.gameplay"],
+      "start_delay_seconds": 0.0,
+      "silence_seconds": 0.0,
+      "fade_in_seconds": 12.0,
+      "fade_out_seconds": 12.0,
+      "tracks": [
+        { "id": "exploration_01", "path": "Music/exploration_01.mp3", "weight": 1.0 },
+        { "id": "exploration_02", "path": "Music/exploration_02.mp3", "weight": 1.0 }
+      ]
+    }
+  ]
+}

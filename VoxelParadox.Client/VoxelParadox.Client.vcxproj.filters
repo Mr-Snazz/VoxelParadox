@@ -1,0 +1,410 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="18.0">
+  <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{3DD5AFAA-5862-469A-8A50-BCF18CCE53CB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Entry">
+      <UniqueIdentifier>{EF561646-1659-4D06-92C3-E23D539328AB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Config">
+      <UniqueIdentifier>{D58DDF65-BDE1-421A-8F32-050DC00933F6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Runtime">
+      <UniqueIdentifier>{03A8DFAE-FFC9-487D-A240-18DED95482AA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Support">
+      <UniqueIdentifier>{D2D4FB00-20BB-4125-94B8-41436B746C2E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Systems">
+      <UniqueIdentifier>{25E135AE-6262-41C4-A7D2-0559873E52C5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Systems\Audio">
+      <UniqueIdentifier>{2DBB3D0E-34FD-4755-8F7C-604B3A8115F6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Systems\Debug">
+      <UniqueIdentifier>{53EE2DEC-8599-481F-A692-E8E583A92BE0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World">
+      <UniqueIdentifier>{B09D2ECA-DFDD-4A32-B9F6-9C6163A38568}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Biomes">
+      <UniqueIdentifier>{A6B367AE-3FAE-4895-A412-8EEF1B85BB6A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Generation">
+      <UniqueIdentifier>{0734081B-F3B5-470C-A8A1-28382880E0EB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Data">
+      <UniqueIdentifier>{95B8C75A-9B59-4A43-85BF-430AE2B1E9DA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Stack">
+      <UniqueIdentifier>{2DD2D1FD-77B5-432A-9C47-833E2D3D1E64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer">
+      <UniqueIdentifier>{62A60D28-6639-48E8-A887-6634B86FE193}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Core">
+      <UniqueIdentifier>{B2FE6A1B-B02B-4F2D-B861-749200FC0C59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Passes">
+      <UniqueIdentifier>{3F212431-01D9-4ADC-908D-4DD255CA99C6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Assets">
+      <UniqueIdentifier>{9716CF6D-C09F-43E5-B303-E35F990B09DA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Preview">
+      <UniqueIdentifier>{B50FE80C-C278-4E34-8CFA-73ED751AEF7F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{43FAEE92-A25B-4A6B-B34A-3C22E2E13869}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\Runtime">
+      <UniqueIdentifier>{290F9059-3ACC-4228-8E2B-001EA1C8481E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\HUD">
+      <UniqueIdentifier>{47001947-017E-4216-9FA9-6834708F6B37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\ImGui">
+      <UniqueIdentifier>{EEC705D4-0368-4A25-B84D-0E3011FAE0B6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entities">
+      <UniqueIdentifier>{5BE2ACD5-A0FC-46B0-B1C3-89EFACC4C123}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entities\Player">
+      <UniqueIdentifier>{96EB5DFD-92A5-4E0D-8C3A-5709D0A0C1AA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entities\Enemies">
+      <UniqueIdentifier>{E7CD2891-B2EE-4E7E-81A9-A01FF39249C5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entities\Items">
+      <UniqueIdentifier>{15FA4127-37C3-48D7-89A9-1954D0F61EAE}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Core\support\game_pch.cpp">
+      <Filter>Core\Support</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Systems\audio\game_audio_controller.cpp">
+      <Filter>Systems\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Systems\debug\biome_debug_tools.cpp">
+      <Filter>Systems\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entities\enemies\enemy_definition.cpp">
+      <Filter>Entities\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entities\enemies\enemy_spawn_system.cpp">
+      <Filter>Entities\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entities\enemies\enemy_system.cpp">
+      <Filter>Entities\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\entities\fbx_entity_model.cpp">
+      <Filter>Renderer\Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entities\player\crafting.cpp">
+      <Filter>Entities\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entities\player\hotbar.cpp">
+      <Filter>Entities\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entities\player\player.cpp">
+      <Filter>Entities\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entities\player\player_interaction.cpp">
+      <Filter>Entities\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entities\player\player_movement.cpp">
+      <Filter>Entities\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entities\player\player_portal.cpp">
+      <Filter>Entities\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\item_texture_cache.cpp">
+      <Filter>Renderer\Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\obj_block_model.cpp">
+      <Filter>Renderer\Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\renderer.cpp">
+      <Filter>Renderer\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\renderer_entities.cpp">
+      <Filter>Renderer\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\renderer_items.cpp">
+      <Filter>Renderer\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\renderer_portals.cpp">
+      <Filter>Renderer\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\hud\hud.cpp">
+      <Filter>UI\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\hud\hud_button_text.cpp">
+      <Filter>UI\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\hud\hud_hotbar.cpp">
+      <Filter>UI\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\hud\hud_image.cpp">
+      <Filter>UI\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\hud\hud_inventory_menu.cpp">
+      <Filter>UI\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\hud\hud_panel.cpp">
+      <Filter>UI\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\hud\hud_portal_info.cpp">
+      <Filter>UI\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\hud\hud_text.cpp">
+      <Filter>UI\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\hud\hud_watch_text.cpp">
+      <Filter>UI\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\runtime\game_chat.cpp">
+      <Filter>UI\Runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\runtime\game_settings.cpp">
+      <Filter>Core\Config</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\runtime\main.cpp">
+      <Filter>Core\Entry</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\runtime\runtime_app.cpp">
+      <Filter>Core\Runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\runtime\runtime_app_bootstrap.cpp">
+      <Filter>Core\Runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\runtime\runtime_app_loop.cpp">
+      <Filter>Core\Runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\runtime\runtime_ui_common.cpp">
+      <Filter>UI\Runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\runtime\runtime_ui_hud.cpp">
+      <Filter>UI\Runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\runtime\runtime_ui.cpp">
+      <Filter>UI\Runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UI\ui\biome_teleport_window.cpp">
+      <Filter>UI\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\world\biome_preset.cpp">
+      <Filter>World\Biomes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\world\biome_preset_defaults.cpp">
+      <Filter>World\Biomes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\world\world_spawn_locator.cpp">
+      <Filter>World\Stack</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\world\world_stack.cpp">
+      <Filter>World\Stack</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\world\world_stack_persistence.cpp">
+      <Filter>World\Stack</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Core\config\client_assets.hpp">
+      <Filter>Core\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\config\client_defaults.hpp">
+      <Filter>Core\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Systems\audio\game_audio_controller.hpp">
+      <Filter>Systems\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Systems\debug\biome_debug_tools.hpp">
+      <Filter>Systems\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Entities\enemies\enemy_definition.hpp">
+      <Filter>Entities\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Entities\enemies\enemy_runtime_helpers.hpp">
+      <Filter>Entities\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Entities\enemies\enemy_spawn_system.hpp">
+      <Filter>Entities\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Entities\enemies\enemy_system.hpp">
+      <Filter>Entities\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Entities\enemies\enemy_types.hpp">
+      <Filter>Entities\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\entities\fbx_entity_model.hpp">
+      <Filter>Renderer\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\support\game_pch.hpp">
+      <Filter>Core\Support</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Entities\items\item_catalog.hpp">
+      <Filter>Entities\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Entities\player\crafting.hpp">
+      <Filter>Entities\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Entities\player\hotbar.hpp">
+      <Filter>Entities\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Entities\player\player.hpp">
+      <Filter>Entities\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\dust_particle_config.hpp">
+      <Filter>Renderer\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\held_block_preview_config.hpp">
+      <Filter>Renderer\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hotbar_layout.hpp">
+      <Filter>Renderer\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hotbar_preview_config.hpp">
+      <Filter>Renderer\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud.hpp">
+      <Filter>UI\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud_button_text.hpp">
+      <Filter>UI\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud_element.hpp">
+      <Filter>UI\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud_examples.hpp">
+      <Filter>UI\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud_hotbar.hpp">
+      <Filter>UI\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud_image.hpp">
+      <Filter>UI\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud_inventory_menu.hpp">
+      <Filter>UI\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud_panel.hpp">
+      <Filter>UI\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud_portal_info.hpp">
+      <Filter>UI\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud_text.hpp">
+      <Filter>UI\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud_watch_text.hpp">
+      <Filter>UI\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud_3d_preview.hpp">
+      <Filter>Renderer\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\inventory_menu_layout.hpp">
+      <Filter>Renderer\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\inventory_menu_preview_config.hpp">
+      <Filter>Renderer\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\item_preview_config.hpp">
+      <Filter>Renderer\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\item_texture_cache.hpp">
+      <Filter>Renderer\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\obj_block_model.hpp">
+      <Filter>Renderer\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\renderer.hpp">
+      <Filter>Renderer\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\renderer_internal.hpp">
+      <Filter>Renderer\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\runtime\game_chat.hpp">
+      <Filter>UI\Runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\runtime\game_settings.hpp">
+      <Filter>Core\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\runtime\runtime_app.hpp">
+      <Filter>Core\Runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\runtime\runtime_app_internal.hpp">
+      <Filter>Core\Runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\runtime\runtime_hud_ids.hpp">
+      <Filter>UI\Runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\runtime\runtime_ui_internal.hpp">
+      <Filter>UI\Runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\runtime\runtime_ui.hpp">
+      <Filter>UI\Runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\ui\biome_teleport_window.hpp">
+      <Filter>UI\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\ui\imgui_layer.hpp">
+      <Filter>UI\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\biome.hpp">
+      <Filter>World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\biome_preset.hpp">
+      <Filter>World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\biome_preset_internal.hpp">
+      <Filter>World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\biome_registry.hpp">
+      <Filter>World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\block.hpp">
+      <Filter>World\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\chunk.hpp">
+      <Filter>World\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\chunk_generator_source.hpp">
+      <Filter>World\Generation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\fractal_world.hpp">
+      <Filter>World\Generation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\noise.hpp">
+      <Filter>World\Generation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\vox_asset.hpp">
+      <Filter>World\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\vox_structure.hpp">
+      <Filter>World\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\world_generator.hpp">
+      <Filter>World\Generation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\world_spawn_locator.hpp">
+      <Filter>World\Stack</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\world_stack.hpp">
+      <Filter>World\Stack</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\UI\ui\imgui_layer.cpp">
+      <Filter>UI\ImGui</Filter>
+    </None>
+    <None Include="src\World\world\biome_registry.cpp">
+      <Filter>World\Biomes</Filter>
+    </None>
+    <None Include="src\World\world\chunk_generator_source.cpp">
+      <Filter>World\Generation</Filter>
+    </None>
+  </ItemGroup>
+</Project>

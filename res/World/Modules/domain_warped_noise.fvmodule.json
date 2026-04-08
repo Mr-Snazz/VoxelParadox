@@ -1,0 +1,36 @@
+{
+  "format_version": 1,
+  "id": "domain_warped_noise",
+  "display_name": "Domain Warped Noise",
+  "type": "domain_warped_noise",
+  "enabled": true,
+  "blend_mode": "place_solids",
+  "settings": {
+    "offset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "infinite_y": false,
+    "min_y": -32,
+    "max_y": 96,
+    "base_scale": 0.03,
+    "octaves": 4,
+    "persistence": 0.5,
+    "lacunarity": 2.0,
+    "threshold": 0.0,
+    "invert": false,
+    "secondary_noise_scale": 0.04,
+    "secondary_threshold": 0.18,
+    "accent_noise_scale": 0.08,
+    "accent_threshold": 0.62,
+    "warp_octaves": 2,
+    "warp_persistence": 0.5,
+    "warp_lacunarity": 2.0,
+    "warp_scale": 0.045,
+    "warp_strength": 9.0,
+    "primary": "stone",
+    "secondary": "organic",
+    "accent": "crystal"
+  }
+}

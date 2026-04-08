@@ -1,0 +1,44 @@
+{
+  "fallback_profile": "generic",
+  "profiles": [
+    {
+      "id": "generic",
+      "break": "block.generic.break",
+      "step": "footstep.generic",
+      "place": "block.generic.place",
+      "hit": "block.generic.hit"
+    },
+    {
+      "id": "stone",
+      "break": "block.stone.break",
+      "step": "footstep.stone",
+      "place": "block.stone.place",
+      "hit": "block.stone.hit",
+      "blocks": ["stone", "void_matter"]
+    },
+    {
+      "id": "organic",
+      "break": "block.organic.break",
+      "step": "footstep.organic",
+      "place": "block.organic.place",
+      "hit": "block.organic.hit",
+      "blocks": ["organic", "membrane", "membrane_weave", "membrane_wire"]
+    },
+    {
+      "id": "metal",
+      "break": "block.metal.break",
+      "step": "footstep.metal",
+      "place": "block.metal.place",
+      "hit": "block.metal.hit",
+      "blocks": ["metal", "portal"]
+    },
+    {
+      "id": "crystal",
+      "break": "block.crystal.break",
+      "step": "footstep.crystal",
+      "place": "block.crystal.place",
+      "hit": "block.crystal.hit",
+      "blocks": ["crystal"]
+    }
+  ]
+}

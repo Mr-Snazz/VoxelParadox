@@ -1,0 +1,55 @@
+{
+  "display_name": "does not exist",
+  "format_version": 3,
+  "id": "does_not_exist",
+  "modules": [
+    {
+      "blend_mode": "place_solids",
+      "display_name": "Grid Pattern",
+      "enabled": true,
+      "format_version": 1,
+      "id": "grid_pattern",
+      "settings": {
+        "accent": "stone",
+        "accent_noise_scale": 0.07999999821186066,
+        "accent_threshold": 0.6800000071525574,
+        "cell_size": {
+          "x": 24,
+          "y": 48,
+          "z": 24
+        },
+        "infinite_y": true,
+        "line_width": {
+          "x": 2,
+          "y": 2,
+          "z": 2
+        },
+        "max_axis_matches": 3,
+        "max_y": 96,
+        "min_axis_matches": 2,
+        "min_y": -32,
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "primary": "stone",
+        "secondary": "organic",
+        "warp_scale": 0.041999999433755875,
+        "warp_strength": 8.899999618530273
+      },
+      "type": "grid_pattern"
+    }
+  ],
+  "preview": {
+    "default_mode": "streaming",
+    "depth": 0,
+    "sandbox_radius": {
+      "x": 2,
+      "y": 1,
+      "z": 2
+    },
+    "seed": 42,
+    "stream_render_distance": 5
+  }
+}

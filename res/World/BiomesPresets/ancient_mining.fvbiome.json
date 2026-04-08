@@ -1,0 +1,54 @@
+{
+  "display_name": "Ancient Mining",
+  "format_version": 3,
+  "id": "ancient_mining",
+  "modules": [
+    {
+      "blend_mode": "place_solids",
+      "display_name": "Domain Warped Noise",
+      "enabled": true,
+      "format_version": 1,
+      "id": "domain_warped_noise",
+      "settings": {
+        "accent": "void_matter",
+        "accent_noise_scale": 0.07999999821186066,
+        "accent_threshold": 0.6200000047683716,
+        "base_scale": 0.029999999329447746,
+        "infinite_y": true,
+        "invert": false,
+        "lacunarity": 2.0,
+        "max_y": 96,
+        "min_y": -32,
+        "octaves": 4,
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "persistence": 0.5,
+        "primary": "stone",
+        "secondary": "void_matter",
+        "secondary_noise_scale": 0.03999999910593033,
+        "secondary_threshold": 0.18000000715255737,
+        "threshold": 0.0,
+        "warp_lacunarity": 1.9869999885559082,
+        "warp_octaves": 2,
+        "warp_persistence": 0.25600001215934753,
+        "warp_scale": 0.027899999171495438,
+        "warp_strength": 20.820999145507813
+      },
+      "type": "domain_warped_noise"
+    }
+  ],
+  "preview": {
+    "default_mode": "streaming",
+    "depth": 0,
+    "sandbox_radius": {
+      "x": 2,
+      "y": 1,
+      "z": 2
+    },
+    "seed": 42,
+    "stream_render_distance": 5
+  }
+}

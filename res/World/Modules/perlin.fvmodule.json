@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "id": "perlin",
+  "display_name": "Perlin",
+  "type": "perlin_terrain",
+  "enabled": true,
+  "blend_mode": "overwrite_all",
+  "settings": {
+    "base_scale": 0.04,
+    "density_threshold": 0.28,
+    "density_octaves": 3,
+    "density_persistence": 0.55,
+    "warp_octaves": 2,
+    "warp_strength": 0.45,
+    "surface_rib": "membrane",
+    "surface_patch": "organic",
+    "shell": "stone",
+    "core": "stone",
+    "accent": "crystal",
+    "recess": "void_matter"
+  }
+}

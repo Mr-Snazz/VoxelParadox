@@ -1,0 +1,29 @@
+{
+  "format_version": 1,
+  "id": "vox_import",
+  "display_name": "Vox Import",
+  "type": "import_vox_files",
+  "enabled": true,
+  "blend_mode": "place_solids",
+  "settings": {
+    "source_directory": "Assets/Voxs",
+    "include_subdirectories": true,
+    "pattern": "random_scatter",
+    "cell_size": {
+      "x": 96,
+      "z": 96
+    },
+    "jitter": {
+      "x": 24,
+      "z": 24
+    },
+    "infinite_y": false,
+    "min_y": -8,
+    "max_y": 40,
+    "spawn_chance": 0.25,
+    "rotation_mode": "random_90",
+    "fixed_rotation": 0,
+    "color_mapping": "default",
+    "seed_offset": 0
+  }
+}

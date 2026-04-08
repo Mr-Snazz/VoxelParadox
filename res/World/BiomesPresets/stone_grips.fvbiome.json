@@ -1,0 +1,51 @@
+{
+  "display_name": "stone grips",
+  "format_version": 3,
+  "id": "stone_grips",
+  "modules": [
+    {
+      "blend_mode": "place_solids",
+      "display_name": "Cellular Noise",
+      "enabled": true,
+      "format_version": 1,
+      "id": "cellular_noise",
+      "settings": {
+        "accent": "crystal",
+        "accent_noise_scale": 0.07999999821186066,
+        "accent_threshold": 0.6200000047683716,
+        "base_scale": 0.05550000071525574,
+        "distance_blend": 0.2619999945163727,
+        "infinite_y": true,
+        "invert": false,
+        "jitter": 0.0,
+        "lacunarity": 2.0,
+        "max_y": 96,
+        "min_y": -32,
+        "octaves": 4,
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "persistence": 0.5,
+        "primary": "stone",
+        "secondary": "metal",
+        "secondary_noise_scale": 0.0,
+        "secondary_threshold": -0.4860000014305115,
+        "threshold": 0.08500000089406967
+      },
+      "type": "cellular_noise"
+    }
+  ],
+  "preview": {
+    "default_mode": "sandbox",
+    "depth": 0,
+    "sandbox_radius": {
+      "x": 2,
+      "y": 1,
+      "z": 2
+    },
+    "seed": 42,
+    "stream_render_distance": 5
+  }
+}

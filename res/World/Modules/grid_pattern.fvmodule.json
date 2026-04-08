@@ -1,0 +1,37 @@
+{
+  "format_version": 1,
+  "id": "grid_pattern",
+  "display_name": "Grid Pattern",
+  "type": "grid_pattern",
+  "enabled": true,
+  "blend_mode": "place_solids",
+  "settings": {
+    "cell_size": {
+      "x": 12,
+      "y": 12,
+      "z": 12
+    },
+    "line_width": {
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "offset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "min_axis_matches": 2,
+    "max_axis_matches": 3,
+    "infinite_y": false,
+    "min_y": -32,
+    "max_y": 96,
+    "warp_scale": 0.0,
+    "warp_strength": 0.0,
+    "accent_noise_scale": 0.08,
+    "accent_threshold": 0.68,
+    "primary": "stone",
+    "secondary": "membrane",
+    "accent": "crystal"
+  }
+}

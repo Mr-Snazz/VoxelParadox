@@ -1,0 +1,51 @@
+{
+  "display_name": "3-14159265",
+  "format_version": 3,
+  "id": "menger_sponge",
+  "modules": [
+    {
+      "blend_mode": "overwrite_all",
+      "display_name": "Menger Sponge",
+      "enabled": true,
+      "format_version": 1,
+      "id": "menger_sponge",
+      "settings": {
+        "accent": "void_matter",
+        "accent_noise_scale": 0.25,
+        "accent_threshold": 1.0,
+        "cell_size": {
+          "x": 82,
+          "y": 82,
+          "z": 82
+        },
+        "infinite_y": true,
+        "invert": false,
+        "iterations": 3,
+        "max_y": 96,
+        "min_y": -32,
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "primary": "void_matter",
+        "secondary": "metal",
+        "void_axis_threshold": 2,
+        "warp_scale": 0.0,
+        "warp_strength": 0.0
+      },
+      "type": "menger_sponge"
+    }
+  ],
+  "preview": {
+    "default_mode": "streaming",
+    "depth": 0,
+    "sandbox_radius": {
+      "x": 2,
+      "y": 1,
+      "z": 2
+    },
+    "seed": 42,
+    "stream_render_distance": 5
+  }
+}

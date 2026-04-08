@@ -1,0 +1,6 @@
+{
+  "categories": "audio_categories.json",
+  "events": "audio_events.json",
+  "profiles": "block_sound_profiles.json",
+  "music_contexts": "music_contexts.json"
+}

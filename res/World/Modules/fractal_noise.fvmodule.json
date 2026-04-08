@@ -1,0 +1,31 @@
+{
+  "format_version": 1,
+  "id": "fractal_noise",
+  "display_name": "Fractal Noise",
+  "type": "fractal_noise",
+  "enabled": true,
+  "blend_mode": "place_solids",
+  "settings": {
+    "offset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "infinite_y": false,
+    "min_y": -32,
+    "max_y": 96,
+    "base_scale": 0.032,
+    "octaves": 5,
+    "persistence": 0.52,
+    "lacunarity": 2.0,
+    "threshold": 0.02,
+    "invert": false,
+    "secondary_noise_scale": 0.04,
+    "secondary_threshold": 0.18,
+    "accent_noise_scale": 0.08,
+    "accent_threshold": 0.62,
+    "primary": "stone",
+    "secondary": "organic",
+    "accent": "crystal"
+  }
+}

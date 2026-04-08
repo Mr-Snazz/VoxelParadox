@@ -1,0 +1,49 @@
+{
+  "display_name": "Waves",
+  "format_version": 3,
+  "id": "waves",
+  "modules": [
+    {
+      "blend_mode": "place_solids",
+      "display_name": "Fractal Noise",
+      "enabled": true,
+      "format_version": 1,
+      "id": "fractal_noise",
+      "settings": {
+        "accent": "crystal",
+        "accent_noise_scale": 0.07999999821186066,
+        "accent_threshold": 0.6200000047683716,
+        "base_scale": 0.05469999834895134,
+        "infinite_y": true,
+        "invert": false,
+        "lacunarity": 2.0,
+        "max_y": 96,
+        "min_y": -32,
+        "octaves": 1,
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "persistence": 0.5199999809265137,
+        "primary": "metal",
+        "secondary": "crystal",
+        "secondary_noise_scale": 0.03999999910593033,
+        "secondary_threshold": 0.18000000715255737,
+        "threshold": 0.019999999552965164
+      },
+      "type": "fractal_noise"
+    }
+  ],
+  "preview": {
+    "default_mode": "streaming",
+    "depth": 0,
+    "sandbox_radius": {
+      "x": 2,
+      "y": 1,
+      "z": 2
+    },
+    "seed": 42,
+    "stream_render_distance": 5
+  }
+}

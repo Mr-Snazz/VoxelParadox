@@ -1,0 +1,22 @@
+[
+  {
+    "recipe_id": "axe",
+    "ingredients": {
+      "top": "organic",
+      "left": "membrane_wire",
+      "right": "membrane_wire"
+    },
+    "output": "axe",
+    "output_count": 1
+  },
+  {
+    "recipe_id": "pickaxe",
+    "ingredients": {
+      "top": "organic",
+      "left": "membrane",
+      "right": "membrane"
+    },
+    "output": "pickaxe",
+    "output_count": 1
+  }
+]

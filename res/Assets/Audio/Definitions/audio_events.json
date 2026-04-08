@@ -1,0 +1,436 @@
+{
+  "events": [
+    {
+      "id": "ui.hotbar.select",
+      "category": "ui",
+      "clips": ["Sounds/UI/hotbar_select.wav"],
+      "base_gain": 0.1,
+      "pitch_range": [1.0, 1.0],
+      "volume_range": [1.0, 1.0],
+      "positional": false,
+      "max_concurrency": 6
+    },
+    {
+      "id": "ui.menu.click",
+      "category": "ui",
+      "clips": ["Sounds/UI/menu_click.wav"],
+      "base_gain": 0.62,
+      "pitch_range": [1.0, 1.0],
+      "volume_range": [1.0, 1.0],
+      "positional": false,
+      "max_concurrency": 2
+    },
+    {
+      "id": "player.item.pickup",
+      "category": "player",
+      "clips": ["Sounds/Player/item_pickup.wav"],
+      "base_gain": 0.58,
+      "pitch_range": [0.98, 1.04],
+      "volume_range": [0.96, 1.04],
+      "positional": false,
+      "max_concurrency": 4
+    },
+    {
+      "id": "player.damage.hit",
+      "category": "player",
+      "clips": [
+        "Sounds/Player/player_injured.wav"
+      ],
+      "base_gain": 0.42,
+      "pitch_range": [0.88, 0.96],
+      "volume_range": [0.96, 1.04],
+      "positional": false,
+      "max_concurrency": 3
+    },
+    {
+      "id": "enemy.trigger.activate",
+      "category": "hostile",
+      "clips": [
+        "Sounds/Enemy/guy_jumpscare.wav"
+      ],
+      "base_gain": 2.5,
+      "pitch_range": [1.8, 1.8],
+      "volume_range": [1.0, 1.0],
+      "positional": false,
+      "reference_distance": 3.0,
+      "max_distance": 42.0,
+      "rolloff_factor": 1.0,
+      "max_concurrency": 4
+    },
+    {
+      "id": "portal.enter",
+      "category": "ambient",
+      "clips": ["Sounds/Portal/portal_enter.wav"],
+      "base_gain": 0.9,
+      "pitch_range": [0.58, 2.02],
+      "volume_range": [0.96, 1.04],
+      "positional": true,
+      "reference_distance": 4.0,
+      "max_distance": 60.0,
+      "rolloff_factor": 0.85,
+      "max_concurrency": 4
+    },
+    {
+      "id": "portal.exit",
+      "category": "ambient",
+      "clips": ["Sounds/Portal/portal_exit.wav"],
+      "base_gain": 0.9,
+      "pitch_range": [0.58, 2.02],
+      "volume_range": [0.96, 1.04],
+      "positional": true,
+      "reference_distance": 4.0,
+      "max_distance": 60.0,
+      "rolloff_factor": 0.85,
+      "max_concurrency": 4
+    },
+    {
+      "id": "block.generic.hit",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/generic_hit_01.wav",
+        "Sounds/Blocks/generic_hit_02.wav"
+      ],
+      "base_gain": 0.7,
+      "fade_in_seconds": 0.5,
+      "pitch_range": [0.96, 1.04],
+      "volume_range": [0.95, 1.05],
+      "positional": true,
+      "max_concurrency": 12
+    },
+    {
+      "id": "footstep.generic",
+      "category": "footsteps",
+      "clips": [
+        "Sounds/Blocks/generic_place_01.wav",
+        "Sounds/Blocks/generic_place_02.wav"
+      ],
+      "base_gain": 0.58,
+      "pitch_range": [0.96, 1.04],
+      "volume_range": [0.95, 1.05],
+      "positional": true,
+      "reference_distance": 2.5,
+      "max_distance": 18.0,
+      "rolloff_factor": 0.75,
+      "max_concurrency": 6
+    },
+    {
+      "id": "block.generic.break",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/generic_break_01.wav",
+        "Sounds/Blocks/generic_break_02.wav"
+      ],
+      "base_gain": 0.9,
+      "pitch_range": [0.95, 1.04],
+      "volume_range": [0.95, 1.05],
+      "positional": true,
+      "max_concurrency": 8
+    },
+    {
+      "id": "block.generic.place",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/generic_place_01.wav",
+        "Sounds/Blocks/generic_place_02.wav"
+      ],
+      "base_gain": 0.72,
+      "pitch_range": [0.97, 1.03],
+      "volume_range": [0.95, 1.05],
+      "positional": true,
+      "max_concurrency": 8
+    },
+    {
+      "id": "block.stone.hit",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/stone/step1.ogg",
+        "Sounds/Blocks/stone/step2.ogg",
+        "Sounds/Blocks/stone/step3.ogg",
+        "Sounds/Blocks/stone/step4.ogg",
+        "Sounds/Blocks/stone/step5.ogg",
+        "Sounds/Blocks/stone/step6.ogg"
+      ],
+      "base_gain": 0.82,
+      "fade_in_seconds": 0.5,
+      "pitch_range": [0.95, 1.03],
+      "volume_range": [0.95, 1.05],
+      "positional": true,
+      "max_concurrency": 12
+    },
+    {
+      "id": "footstep.stone",
+      "category": "footsteps",
+      "clips": [
+        "Sounds/Blocks/stone/step1.ogg",
+        "Sounds/Blocks/stone/step2.ogg",
+        "Sounds/Blocks/stone/step3.ogg",
+        "Sounds/Blocks/stone/step4.ogg",
+        "Sounds/Blocks/stone/step5.ogg",
+        "Sounds/Blocks/stone/step6.ogg"
+      ],
+      "base_gain": 0.64,
+      "pitch_range": [0.96, 1.03],
+      "volume_range": [0.95, 1.05],
+      "positional": true,
+      "reference_distance": 2.5,
+      "max_distance": 18.0,
+      "rolloff_factor": 0.75,
+      "max_concurrency": 6
+    },
+    {
+      "id": "block.stone.break",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/stone/break1.ogg",
+        "Sounds/Blocks/stone/break2.ogg",
+        "Sounds/Blocks/stone/break3.ogg",
+        "Sounds/Blocks/stone/break4.ogg",
+        "Sounds/Blocks/stone/break5.ogg"
+      ],
+      "base_gain": 1.0,
+      "pitch_range": [0.95, 1.03],
+      "volume_range": [0.94, 1.04],
+      "positional": true,
+      "max_concurrency": 10
+    },
+    {
+      "id": "block.stone.place",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/stone/step1.ogg",
+        "Sounds/Blocks/stone/step2.ogg",
+        "Sounds/Blocks/stone/step3.ogg",
+        "Sounds/Blocks/stone/step4.ogg",
+        "Sounds/Blocks/stone/step5.ogg",
+        "Sounds/Blocks/stone/step6.ogg"
+      ],
+      "base_gain": 0.82,
+      "pitch_range": [0.96, 1.02],
+      "volume_range": [0.95, 1.05],
+      "positional": true,
+      "max_concurrency": 8
+    },
+    {
+      "id": "block.organic.hit",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/organic/step1.ogg",
+        "Sounds/Blocks/organic/step2.ogg",
+        "Sounds/Blocks/organic/step3.ogg",
+        "Sounds/Blocks/organic/step4.ogg",
+        "Sounds/Blocks/organic/step5.ogg"
+      ],
+      "base_gain": 0.78,
+      "fade_in_seconds": 0.5,
+      "pitch_range": [0.92, 1.08],
+      "volume_range": [0.95, 1.05],
+      "positional": true,
+      "max_concurrency": 12
+    },
+    {
+      "id": "footstep.organic",
+      "category": "footsteps",
+      "clips": [
+        "Sounds/Blocks/organic/step1.ogg",
+        "Sounds/Blocks/organic/step2.ogg",
+        "Sounds/Blocks/organic/step3.ogg",
+        "Sounds/Blocks/organic/step4.ogg",
+        "Sounds/Blocks/organic/step5.ogg"
+      ],
+      "base_gain": 0.62,
+      "pitch_range": [0.94, 1.06],
+      "volume_range": [0.95, 1.05],
+      "positional": true,
+      "reference_distance": 2.5,
+      "max_distance": 18.0,
+      "rolloff_factor": 0.75,
+      "max_concurrency": 6
+    },
+    {
+      "id": "block.organic.break",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/organic/break1.ogg",
+        "Sounds/Blocks/organic/break2.ogg",
+        "Sounds/Blocks/organic/break3.ogg",
+        "Sounds/Blocks/organic/break4.ogg",
+        "Sounds/Blocks/organic/break5.ogg",
+        "Sounds/Blocks/organic/break6.ogg",
+        "Sounds/Blocks/organic/break7.ogg"
+      ],
+      "base_gain": 0.94,
+      "pitch_range": [0.92, 1.08],
+      "volume_range": [0.95, 1.05],
+      "positional": true,
+      "max_concurrency": 10
+    },
+    {
+      "id": "block.organic.place",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/organic/step1.ogg",
+        "Sounds/Blocks/organic/step2.ogg",
+        "Sounds/Blocks/organic/step3.ogg",
+        "Sounds/Blocks/organic/step4.ogg",
+        "Sounds/Blocks/organic/step5.ogg"
+      ],
+      "base_gain": 0.76,
+      "pitch_range": [0.94, 1.06],
+      "volume_range": [0.95, 1.05],
+      "positional": true,
+      "max_concurrency": 8
+    },
+    {
+      "id": "block.metal.hit",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/metal/step1.ogg",
+        "Sounds/Blocks/metal/step2.ogg",
+        "Sounds/Blocks/metal/step3.ogg",
+        "Sounds/Blocks/metal/step4.ogg",
+        "Sounds/Blocks/metal/step5.ogg",
+        "Sounds/Blocks/metal/step6.ogg"
+      ],
+      "base_gain": 0.82,
+      "fade_in_seconds": 0.5,
+      "pitch_range": [0.97, 1.02],
+      "volume_range": [0.95, 1.04],
+      "positional": true,
+      "max_concurrency": 12
+    },
+    {
+      "id": "footstep.metal",
+      "category": "footsteps",
+      "clips": [
+        "Sounds/Blocks/metal/step1.ogg",
+        "Sounds/Blocks/metal/step2.ogg",
+        "Sounds/Blocks/metal/step3.ogg",
+        "Sounds/Blocks/metal/step4.ogg",
+        "Sounds/Blocks/metal/step5.ogg",
+        "Sounds/Blocks/metal/step6.ogg"
+      ],
+      "base_gain": 0.60,
+      "pitch_range": [0.97, 1.02],
+      "volume_range": [0.95, 1.04],
+      "positional": true,
+      "reference_distance": 2.5,
+      "max_distance": 18.0,
+      "rolloff_factor": 0.75,
+      "max_concurrency": 6
+    },
+    {
+      "id": "block.metal.break",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/metal/break1.ogg",
+        "Sounds/Blocks/metal/break2.ogg",
+        "Sounds/Blocks/metal/break3.ogg",
+        "Sounds/Blocks/metal/break4.ogg"
+      ],
+      "base_gain": 1.0,
+      "pitch_range": [0.97, 1.02],
+      "volume_range": [0.95, 1.04],
+      "positional": true,
+      "max_concurrency": 10
+    },
+    {
+      "id": "block.metal.place",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/metal/place1.ogg",
+        "Sounds/Blocks/metal/place2.ogg",
+        "Sounds/Blocks/metal/place3.ogg",
+        "Sounds/Blocks/metal/place4.ogg"
+      ],
+      "base_gain": 0.76,
+      "pitch_range": [0.97, 1.02],
+      "volume_range": [0.95, 1.04],
+      "positional": true,
+      "max_concurrency": 8
+    },
+    {
+      "id": "block.crystal.hit",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/crystal/step1.ogg",
+        "Sounds/Blocks/crystal/step2.ogg",
+        "Sounds/Blocks/crystal/step3.ogg",
+        "Sounds/Blocks/crystal/step4.ogg",
+        "Sounds/Blocks/crystal/step5.ogg",
+        "Sounds/Blocks/crystal/step6.ogg",
+        "Sounds/Blocks/crystal/step7.ogg",
+        "Sounds/Blocks/crystal/step8.ogg",
+        "Sounds/Blocks/crystal/step9.ogg",
+        "Sounds/Blocks/crystal/step10.ogg",
+        "Sounds/Blocks/crystal/step11.ogg",
+        "Sounds/Blocks/crystal/step12.ogg",
+        "Sounds/Blocks/crystal/step13.ogg",
+        "Sounds/Blocks/crystal/step14.ogg"
+      ],
+      "base_gain": 0.84,
+      "fade_in_seconds": 0.5,
+      "pitch_range": [0.99, 1.05],
+      "volume_range": [0.95, 1.04],
+      "positional": true,
+      "max_concurrency": 12
+    },
+    {
+      "id": "footstep.crystal",
+      "category": "footsteps",
+      "clips": [
+        "Sounds/Blocks/crystal/step1.ogg",
+        "Sounds/Blocks/crystal/step2.ogg",
+        "Sounds/Blocks/crystal/step3.ogg",
+        "Sounds/Blocks/crystal/step4.ogg",
+        "Sounds/Blocks/crystal/step5.ogg",
+        "Sounds/Blocks/crystal/step6.ogg",
+        "Sounds/Blocks/crystal/step7.ogg",
+        "Sounds/Blocks/crystal/step8.ogg",
+        "Sounds/Blocks/crystal/step9.ogg",
+        "Sounds/Blocks/crystal/step10.ogg",
+        "Sounds/Blocks/crystal/step11.ogg",
+        "Sounds/Blocks/crystal/step12.ogg",
+        "Sounds/Blocks/crystal/step13.ogg",
+        "Sounds/Blocks/crystal/step14.ogg"
+      ],
+      "base_gain": 0.62,
+      "pitch_range": [0.99, 1.05],
+      "volume_range": [0.95, 1.04],
+      "positional": true,
+      "reference_distance": 2.5,
+      "max_distance": 18.0,
+      "rolloff_factor": 0.75,
+      "max_concurrency": 6
+    },
+    {
+      "id": "block.crystal.break",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/crystal/break1.ogg",
+        "Sounds/Blocks/crystal/break2.ogg",
+        "Sounds/Blocks/crystal/break3.ogg",
+        "Sounds/Blocks/crystal/break4.ogg"
+      ],
+      "base_gain": 1.05,
+      "pitch_range": [0.99, 1.05],
+      "volume_range": [0.95, 1.04],
+      "positional": true,
+      "max_concurrency": 10
+    },
+    {
+      "id": "block.crystal.place",
+      "category": "block",
+      "clips": [
+        "Sounds/Blocks/crystal/place1.ogg",
+        "Sounds/Blocks/crystal/place2.ogg",
+        "Sounds/Blocks/crystal/place3.ogg",
+        "Sounds/Blocks/crystal/place4.ogg"
+      ],
+      "base_gain": 0.8,
+      "pitch_range": [0.99, 1.05],
+      "volume_range": [0.95, 1.04],
+      "positional": true,
+      "max_concurrency": 8
+    }
+  ]
+}

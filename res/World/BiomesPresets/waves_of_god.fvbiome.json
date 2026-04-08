@@ -1,0 +1,40 @@
+{
+  "display_name": "The Waves of God",
+  "format_version": 3,
+  "id": "waves_of_god",
+  "modules": [
+    {
+      "blend_mode": "overwrite_all",
+      "display_name": "Perlin",
+      "enabled": true,
+      "format_version": 1,
+      "id": "perlin",
+      "settings": {
+        "accent": "crystal",
+        "base_scale": 0.04500000178813934,
+        "core": "void_matter",
+        "density_octaves": 1,
+        "density_persistence": 0.10000000149011612,
+        "density_threshold": 0.2800000011920929,
+        "recess": "void_matter",
+        "shell": "stone",
+        "surface_patch": "membrane",
+        "surface_rib": "organic",
+        "warp_octaves": 1,
+        "warp_strength": 0.0
+      },
+      "type": "perlin_terrain"
+    }
+  ],
+  "preview": {
+    "default_mode": "sandbox",
+    "depth": 0,
+    "sandbox_radius": {
+      "x": 5,
+      "y": 5,
+      "z": 5
+    },
+    "seed": 0,
+    "stream_render_distance": 6
+  }
+}

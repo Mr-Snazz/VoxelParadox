@@ -1,0 +1,32 @@
+{
+  "format_version": 1,
+  "id": "ridged_noise",
+  "display_name": "Ridged Noise",
+  "type": "ridged_noise",
+  "enabled": true,
+  "blend_mode": "place_solids",
+  "settings": {
+    "offset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "infinite_y": false,
+    "min_y": -32,
+    "max_y": 96,
+    "base_scale": 0.028,
+    "octaves": 5,
+    "persistence": 0.55,
+    "lacunarity": 2.0,
+    "threshold": 0.24,
+    "invert": false,
+    "secondary_noise_scale": 0.04,
+    "secondary_threshold": 0.05,
+    "accent_noise_scale": 0.08,
+    "accent_threshold": 0.62,
+    "ridge_sharpness": 1.7,
+    "primary": "stone",
+    "secondary": "membrane",
+    "accent": "crystal"
+  }
+}

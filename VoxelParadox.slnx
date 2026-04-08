@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="VoxelParadox.Engine/VoxelParadox.Engine.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f8c2f3c0-3e7a-4e5c-a0d8-1a6b4015e201" />
+  <Project Path="VoxelParadox.Client/VoxelParadox.Client.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="34e045cf-c0e4-4c73-8d8f-b8b3610d8b4a" DefaultStartup="true">
+    <BuildDependency Project="VoxelParadox.Engine/VoxelParadox.Engine.vcxproj" />
+  </Project>
+  <Project Path="VoxelParadox.BiomeMaker/VoxelParadox.BiomeMaker.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="a8a21d7f-3f63-4c4d-8124-40f4281b0c39">
+    <BuildDependency Project="VoxelParadox.Engine/VoxelParadox.Engine.vcxproj" />
+  </Project>
+  <Project Path="VoxelParadox.ShaderEditor/VoxelParadox.ShaderEditor.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="c3a971e7-0e2e-47f9-a8d8-457f1a9fa4cb">
+    <BuildDependency Project="VoxelParadox.Engine/VoxelParadox.Engine.vcxproj" />
+  </Project>
+</Solution>

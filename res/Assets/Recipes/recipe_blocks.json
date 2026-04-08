@@ -1,0 +1,11 @@
+[
+  {
+    "recipe_id": "membrane_weave",
+    "ingredients": {
+      "left": "membrane",
+      "right": "organic"
+    },
+    "output": "membrane_weave",
+    "output_count": 1
+  }
+]
