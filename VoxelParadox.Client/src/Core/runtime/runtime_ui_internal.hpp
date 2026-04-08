@@ -55,7 +55,8 @@ bool hasPendingSettingsChanges(const GameSettings& appliedSettings,
 glm::ivec2 recommendedMonitorResolution();
 std::string resolutionSelectionText(
     const GameSettings& settings,
-    const std::vector<glm::ivec2>& availableResolutions);
+    const std::vector<glm::ivec2>& availableResolutions,
+    bool locked = false);
 
 void applyWindowSettings(RuntimeUiState& uiState, const GameSettings& settings);
 void stepRenderDistanceSelection(GameSettings& settings, int delta);

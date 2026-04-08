@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <ctime>
 #include <cstdio>
 #include <fstream>
 #include <iomanip>
@@ -288,6 +289,23 @@ json serializePlayerState(const Player::PersistentState& state) {
     };
 }
 
+json serializePortalTrackerState(
+    const PlayerData::PortalTrackerState& state) {
+    return json{
+        {"trackingActive", state.trackingActive},
+        {"trackedBlock", {
+            {"x", state.trackedBlock.x},
+            {"y", state.trackedBlock.y},
+            {"z", state.trackedBlock.z},
+        }},
+        {"trackedWorldSeed", state.trackedWorldSeed},
+        {"trackedWorldBiome", serializeBiomeSelection(state.trackedWorldBiome)},
+        {"trackedChildSeed", state.trackedChildSeed},
+        {"trackedChildBiome", serializeBiomeSelection(state.trackedChildBiome)},
+        {"trackedUniverseName", state.trackedUniverseName},
+    };
+}
+
 bool deserializePlayerState(const json& value, Player::PersistentState& outState) {
     if (!value.is_object()) {
         return false;
@@ -353,6 +371,52 @@ bool deserializePlayerState(const json& value, Player::PersistentState& outState
     }
     if (value.contains("hotbarState")) {
         deserializeHotbarState(value["hotbarState"], outState.hotbarState);
+    }
+
+    return true;
+}
+
+bool deserializePortalTrackerState(
+    const json& value,
+    PlayerData::PortalTrackerState& outState) {
+    if (!value.is_object()) {
+        return false;
+    }
+
+    if (value.contains("trackingActive") && value["trackingActive"].is_boolean()) {
+        outState.trackingActive = value["trackingActive"].get<bool>();
+    }
+    if (value.contains("trackedBlock") && value["trackedBlock"].is_object()) {
+        const auto& block = value["trackedBlock"];
+        if (block.contains("x") && block["x"].is_number_integer()) {
+            outState.trackedBlock.x = block["x"].get<int>();
+        }
+        if (block.contains("y") && block["y"].is_number_integer()) {
+            outState.trackedBlock.y = block["y"].get<int>();
+        }
+        if (block.contains("z") && block["z"].is_number_integer()) {
+            outState.trackedBlock.z = block["z"].get<int>();
+        }
+    }
+    if (value.contains("trackedWorldSeed") &&
+        value["trackedWorldSeed"].is_number_integer()) {
+        outState.trackedWorldSeed = value["trackedWorldSeed"].get<std::uint32_t>();
+    }
+    if (value.contains("trackedWorldBiome")) {
+        deserializeBiomeSelection(value["trackedWorldBiome"],
+                                  outState.trackedWorldBiome);
+    }
+    if (value.contains("trackedChildSeed") &&
+        value["trackedChildSeed"].is_number_integer()) {
+        outState.trackedChildSeed = value["trackedChildSeed"].get<std::uint32_t>();
+    }
+    if (value.contains("trackedChildBiome")) {
+        deserializeBiomeSelection(value["trackedChildBiome"],
+                                  outState.trackedChildBiome);
+    }
+    if (value.contains("trackedUniverseName") &&
+        value["trackedUniverseName"].is_string()) {
+        outState.trackedUniverseName = value["trackedUniverseName"].get<std::string>();
     }
 
     return true;
@@ -495,6 +559,26 @@ std::uint32_t generateWorldSeed() {
     std::uniform_int_distribution<std::uint32_t> distribution(
         1u, std::numeric_limits<std::uint32_t>::max());
     return distribution(generator);
+}
+
+std::string currentTimestampString() {
+    const std::time_t nowTime = std::time(nullptr);
+    std::tm localTime{};
+    localtime_s(&localTime, &nowTime);
+
+    char buffer[32];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &localTime);
+    return buffer;
+}
+
+void logSaveEvent(const std::string& action, const WorldSession& session,
+                  double totalPlaytimeSeconds) {
+    std::printf("[Save] %s | %s | World: %s | Directory: %s | Playtime: %.2fs\n",
+                currentTimestampString().c_str(), action.c_str(),
+                session.manifest.displayName.c_str(),
+                session.paths.worldDirectory.string().c_str(),
+                std::max(0.0, totalPlaytimeSeconds));
+    std::fflush(stdout);
 }
 
 std::filesystem::path worldsRoot() {
@@ -681,6 +765,11 @@ bool savePlayerData(const WorldPaths& paths, const PlayerData& playerData,
         {"currentUniverseSeed", playerData.currentUniverseSeed},
         {"currentUniverseBiomeSelection",
          serializeBiomeSelection(playerData.currentUniverseBiomeSelection)},
+        {"hasPortalTrackerState", playerData.hasPortalTrackerState},
+        {"portalTrackerState",
+         playerData.hasPortalTrackerState
+             ? serializePortalTrackerState(playerData.portalTrackerState)
+             : json::object()},
         {"traversalStack", traversalStack},
     };
     return writeJsonFile(paths.playerDataFilePath, value, outError);
@@ -716,6 +805,14 @@ bool loadPlayerData(const WorldPaths& paths, PlayerData& outPlayerData,
     if (value.contains("currentUniverseBiomeSelection")) {
         deserializeBiomeSelection(value["currentUniverseBiomeSelection"],
                                   data.currentUniverseBiomeSelection);
+    }
+    if (value.contains("hasPortalTrackerState") &&
+        value["hasPortalTrackerState"].is_boolean()) {
+        data.hasPortalTrackerState = value["hasPortalTrackerState"].get<bool>();
+    }
+    if (value.contains("portalTrackerState")) {
+        deserializePortalTrackerState(value["portalTrackerState"],
+                                      data.portalTrackerState);
     }
     if (value.contains("traversalStack") && value["traversalStack"].is_array()) {
         for (const auto& entry : value["traversalStack"]) {
@@ -813,6 +910,7 @@ bool createWorld(const std::string& displayName,
         return false;
     }
 
+    logSaveEvent("World created and saved", session, session.totalPlaytimeSeconds);
     outSession = std::move(session);
     return true;
 }
@@ -908,6 +1006,7 @@ bool saveSession(const WorldSession& session, const Player& player,
         return false;
     }
 
+    logSaveEvent("World session saved", session, totalPlaytimeSeconds);
     return true;
 }
 

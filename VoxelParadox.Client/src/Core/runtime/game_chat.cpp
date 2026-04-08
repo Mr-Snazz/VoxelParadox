@@ -15,6 +15,7 @@
 #include "enemies/enemy_spawn_system.hpp"
 #include "items/item_catalog.hpp"
 #include "player/player.hpp"
+#include "render/hud/hud_chat_background.hpp"
 #include "render/hud/hud.hpp"
 #include "render/hud/hud_text.hpp"
 #include "render/hud/hud_watch_text.hpp"
@@ -27,6 +28,7 @@ namespace {
 // and HUD visibility all live in one file.
 
 constexpr const char* kChatHistoryGroup = RuntimeHudIds::kChatHistory;
+constexpr const char* kChatBackgroundGroup = "runtime.chat.background";
 constexpr const char* kChatInputGroup = RuntimeHudIds::kChatInput;
 constexpr const char* kChatSuggestionGroup = RuntimeHudIds::kChatSuggestions;
 constexpr double kClosedHistoryLifetimeSeconds = 8.0;
@@ -196,7 +198,7 @@ void GameChat::open() {
   }
 
   open_ = true;
-  nextBackspaceRepeatTime_ = -1.0;
+  inputState_.resetRepeats();
   Input::enableTextInput(true);
 }
 
@@ -206,8 +208,8 @@ void GameChat::close() {
   }
 
   open_ = false;
-  inputBuffer_.clear();
-  nextBackspaceRepeatTime_ = -1.0;
+  inputState_.setText({});
+  inputState_.resetRepeats();
   Input::enableTextInput(false);
 }
 
@@ -222,17 +224,33 @@ bool GameChat::handleFrameInput(GameChatCommandContext& commandContext,
     return true;
   }
 
-  inputBuffer_ += Input::consumeTypedChars();
-
   const double now = ENGINE::GETTIME();
-  if (Input::keyPressed(GLFW_KEY_BACKSPACE)) {
-    eraseLastCharacter();
-    nextBackspaceRepeatTime_ = now + 0.45;
-  } else if (!Input::keyDown(GLFW_KEY_BACKSPACE)) {
-    nextBackspaceRepeatTime_ = -1.0;
-  } else if (nextBackspaceRepeatTime_ >= 0.0 && now >= nextBackspaceRepeatTime_) {
-    eraseLastCharacter();
-    nextBackspaceRepeatTime_ = now + 0.05;
+  inputState_.insertText(Input::consumeTypedChars());
+
+  if (Input::keyDown(GLFW_KEY_LEFT_CONTROL) &&
+      Input::keyPressed(GLFW_KEY_A)) {
+    inputState_.selectAll();
+    return true;
+  }
+
+  if (TextInputState::consumeHeldKey(GLFW_KEY_LEFT, now,
+                                     inputState_.nextLeftRepeatTime)) {
+    inputState_.moveCaretLeft();
+  }
+
+  if (TextInputState::consumeHeldKey(GLFW_KEY_RIGHT, now,
+                                     inputState_.nextRightRepeatTime)) {
+    inputState_.moveCaretRight();
+  }
+
+  if (TextInputState::consumeHeldKey(GLFW_KEY_BACKSPACE, now,
+                                     inputState_.nextBackspaceRepeatTime)) {
+    inputState_.eraseBackward();
+  }
+
+  if (TextInputState::consumeHeldKey(GLFW_KEY_DELETE, now,
+                                     inputState_.nextDeleteRepeatTime)) {
+    inputState_.eraseForward();
   }
 
   if (Input::keyPressed(GLFW_KEY_TAB)) {
@@ -241,7 +259,7 @@ bool GameChat::handleFrameInput(GameChatCommandContext& commandContext,
   }
 
   if (Input::keyPressed(GLFW_KEY_UP) && !lastSubmittedInput_.empty()) {
-    inputBuffer_ = lastSubmittedInput_;
+    inputState_.setText(lastSubmittedInput_);
     return true;
   }
 
@@ -259,9 +277,14 @@ bool GameChat::handleFrameInput(GameChatCommandContext& commandContext,
 }
 
 void GameChat::setupHud() {
+  HUD::createGroup(kChatBackgroundGroup, 69, false);
   HUD::createGroup(kChatHistoryGroup, 70, false);
   HUD::createGroup(kChatInputGroup, 71, false);
   HUD::createGroup(kChatSuggestionGroup, 72, false);
+
+  addGroupedHudElement(
+      new hudChatBackground(this),
+      kChatBackgroundGroup, -1);
 
   for (int lineIndex = 0; lineIndex < kVisibleHistoryLines; lineIndex++) {
     const float yOffset =
@@ -314,6 +337,7 @@ void GameChat::setupHud() {
 }
 
 void GameChat::syncHudState() const {
+  HUD::setGroupEnabled(kChatBackgroundGroup, shouldShowHistory() || open_);
   HUD::setGroupEnabled(kChatHistoryGroup, shouldShowHistory());
   HUD::setGroupEnabled(kChatInputGroup, open_);
   HUD::setGroupEnabled(kChatSuggestionGroup, shouldShowSuggestions());
@@ -352,12 +376,16 @@ std::string GameChat::inputLineText() const {
   }
 
   std::string line = "> ";
-  line += inputBuffer_;
+  const std::size_t caretIndex =
+      std::min(inputState_.caretIndex, inputState_.text.size());
+  line += inputState_.text.substr(0, caretIndex);
 
   const int blinkPhase = static_cast<int>(ENGINE::GETTIME() * 2.0);
   if ((blinkPhase % 2) == 0) {
     line += '_';
   }
+
+  line += inputState_.text.substr(caretIndex);
 
   return line;
 }
@@ -387,12 +415,6 @@ void GameChat::pushHistory(const std::string& text) {
   }
 }
 
-void GameChat::eraseLastCharacter() {
-  if (!inputBuffer_.empty()) {
-    inputBuffer_.pop_back();
-  }
-}
-
 bool GameChat::shouldShowHistory() const {
   if (open_) {
     return true;
@@ -418,22 +440,22 @@ void GameChat::autocompleteInput() {
   }
 
   if (candidates.size() == 1) {
-    inputBuffer_ = candidates.front();
+    inputState_.setText(candidates.front());
     return;
   }
 
   const std::string prefix = longestCommonPrefix(candidates);
-  if (prefix.size() > inputBuffer_.size()) {
-    inputBuffer_ = prefix;
+  if (prefix.size() > inputState_.text.size()) {
+    inputState_.setText(prefix);
   }
 }
 
 std::vector<std::string> GameChat::autocompleteCandidates() const {
-  if (inputBuffer_.empty() || inputBuffer_.front() != '/') {
+  if (inputState_.text.empty() || inputState_.text.front() != '/') {
     return {};
   }
 
-  const std::string normalized = lowercase(inputBuffer_);
+  const std::string normalized = lowercase(inputState_.text);
 
   auto filterByPrefix =
       [&normalized](const std::vector<std::string>& options) {
@@ -558,7 +580,7 @@ bool GameChat::tryParseBooleanWord(const std::string& value, bool& outValue) {
 }
 
 void GameChat::submit(GameChatCommandContext& commandContext) {
-  const std::string submitted = trim(inputBuffer_);
+  const std::string submitted = trim(inputState_.text);
   close();
 
   if (submitted.empty()) {

@@ -47,6 +47,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>game_pch.hpp</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="src\Core\support\crash_handler.cpp" />
     <ClCompile Include="src\Systems\audio\game_audio_controller.cpp" />
     <ClCompile Include="src\Systems\debug\biome_debug_tools.cpp" />
     <ClCompile Include="src\Entities\enemies\enemy_definition.cpp" />
@@ -67,6 +68,7 @@
     <ClCompile Include="src\Renderer\render\renderer_portals.cpp" />
     <ClCompile Include="src\Renderer\render\hud\hud.cpp" />
     <ClCompile Include="src\Renderer\render\hud\hud_button_text.cpp" />
+    <ClCompile Include="src\Renderer\render\hud\hud_chat_background.cpp" />
     <ClCompile Include="src\Renderer\render\hud\hud_hotbar.cpp" />
     <ClCompile Include="src\Renderer\render\hud\hud_image.cpp" />
     <ClCompile Include="src\Renderer\render\hud\hud_inventory_menu.cpp" />
@@ -97,6 +99,7 @@
   <ItemGroup>
     <ClInclude Include="src\Core\config\client_assets.hpp" />
     <ClInclude Include="src\Core\config\client_defaults.hpp" />
+    <ClInclude Include="src\Core\support\crash_handler.hpp" />
     <ClInclude Include="src\Systems\audio\game_audio_controller.hpp" />
     <ClInclude Include="src\Systems\debug\biome_debug_tools.hpp" />
     <ClInclude Include="src\Entities\enemies\enemy_definition.hpp" />
@@ -116,6 +119,7 @@
     <ClInclude Include="src\Renderer\render\hotbar_preview_config.hpp" />
     <ClInclude Include="src\Renderer\render\hud\hud.hpp" />
     <ClInclude Include="src\Renderer\render\hud\hud_button_text.hpp" />
+    <ClInclude Include="src\Renderer\render\hud\hud_chat_background.hpp" />
     <ClInclude Include="src\Renderer\render\hud\hud_element.hpp" />
     <ClInclude Include="src\Renderer\render\hud\hud_examples.hpp" />
     <ClInclude Include="src\Renderer\render\hud\hud_hotbar.hpp" />

@@ -125,9 +125,19 @@ bool captureGameplayScreenshot(GLFWwindow* window) {
 
 bool saveCurrentWorldSession(WorldSaveService::WorldSession& worldSession,
                              Player& player, WorldStack& worldStack,
+                             hudPortalTracker* portalTracker,
                              RuntimeUI::RuntimeUiState& uiState,
                              double totalPlaytimeSeconds, bool showToast,
                              std::string* outError = nullptr) {
+  if (portalTracker) {
+    worldSession.playerData.hasPortalTrackerState = true;
+    worldSession.playerData.portalTrackerState =
+        portalTracker->capturePersistentState();
+  } else {
+    worldSession.playerData.hasPortalTrackerState = false;
+    worldSession.playerData.portalTrackerState = {};
+  }
+
   if (!WorldSaveService::saveSession(worldSession, player, worldStack,
                                      totalPlaytimeSeconds, outError)) {
     return false;
@@ -253,6 +263,13 @@ void rebuildHudIfRequested(Player& player, WorldStack& worldStack, Renderer& ren
     return;
   }
 
+  WorldSaveService::PlayerData::PortalTrackerState trackerState{};
+  bool hasTrackerState = false;
+  if (portalTracker) {
+    trackerState = portalTracker->capturePersistentState();
+    hasTrackerState = trackerState.trackingActive;
+  }
+
   settingsBundle.uiState.hudRebuildRequested = false;
   HUD::clear();
   portalInfo = RuntimeUI::setupHUD(
@@ -261,7 +278,14 @@ void rebuildHudIfRequested(Player& player, WorldStack& worldStack, Renderer& ren
       settingsBundle.availableResolutions, settingsBundle.uiState, &portalTracker);
   gameChat.setupHud();
   gameChat.syncHudState();
+  if (portalTracker && hasTrackerState) {
+    portalTracker->applyPersistentState(trackerState);
+  }
   RuntimeUI::syncCursorVisibility(player, portalTracker);
+}
+
+void logShutdownStep(const char* message) {
+  RuntimeAppInternal::printBootstrapInfo(message);
 }
 
 }  // namespace
@@ -290,15 +314,16 @@ RuntimeLoopExitReason runMainLoop(GLFWwindow* window, Renderer& renderer,
   std::string autosaveError;
   const std::uint64_t pauseListenerId = ENGINE::ADDPAUSELISTENER(
       [&worldSession, &player, &worldStack, &settingsBundle,
-       &totalPlaytimeSeconds, &lastAutosavePlaytimeSeconds, &autosaveError](
+       &totalPlaytimeSeconds, &lastAutosavePlaytimeSeconds, &autosaveError,
+       portalTracker](
           bool paused) {
         if (!paused) {
           return;
         }
 
         if (!saveCurrentWorldSession(worldSession, player, worldStack,
-                                     settingsBundle.uiState, totalPlaytimeSeconds,
-                                     true, &autosaveError)) {
+                                     portalTracker, settingsBundle.uiState,
+                                     totalPlaytimeSeconds, true, &autosaveError)) {
           if (!autosaveError.empty()) {
             RuntimeAppInternal::printBootstrapError(autosaveError.c_str());
           }
@@ -384,7 +409,7 @@ RuntimeLoopExitReason runMainLoop(GLFWwindow* window, Renderer& renderer,
     if (!ENGINE::ISPAUSED() &&
         totalPlaytimeSeconds - lastAutosavePlaytimeSeconds >= 300.0) {
       autosaveError.clear();
-      if (saveCurrentWorldSession(worldSession, player, worldStack,
+      if (saveCurrentWorldSession(worldSession, player, worldStack, portalTracker,
                                   settingsBundle.uiState, totalPlaytimeSeconds,
                                   true, &autosaveError)) {
         lastAutosavePlaytimeSeconds = totalPlaytimeSeconds;
@@ -413,8 +438,9 @@ RuntimeLoopExitReason runMainLoop(GLFWwindow* window, Renderer& renderer,
   }
 
   autosaveError.clear();
-  if (!saveCurrentWorldSession(worldSession, player, worldStack, settingsBundle.uiState,
-                               totalPlaytimeSeconds, false, &autosaveError) &&
+  if (!saveCurrentWorldSession(worldSession, player, worldStack, portalTracker,
+                               settingsBundle.uiState, totalPlaytimeSeconds, false,
+                               &autosaveError) &&
       !autosaveError.empty()) {
     RuntimeAppInternal::printBootstrapError(autosaveError.c_str());
   }
@@ -429,25 +455,36 @@ RuntimeLoopExitReason runMainLoop(GLFWwindow* window, Renderer& renderer,
 }
 
 void shutdownGame(GLFWwindow*& window, Renderer& renderer, WorldStack* worldStack) {
+  RuntimeAppInternal::printBootstrapInfo("Shutting down game runtime...");
+
   // --- 1. Developer UI Shutdown ---
 #if defined(VP_ENABLE_DEV_TOOLS)
+  logShutdownStep("Shutdown Step 1/7 - Developer UI");
   BiomeTeleportWindow::shutdown();
 #endif
+  logShutdownStep("Shutdown Step 2/7 - ImGui Layer");
   ImGuiLayer::shutdown();
 
   // --- 2. Gameplay Subsystems ---
+  logShutdownStep("Shutdown Step 3/7 - HUD");
   HUD::cleanup();
   if (worldStack) {
+    logShutdownStep("Shutdown Step 4/7 - World Stack");
     worldStack->shutdown();
   }
+  logShutdownStep("Shutdown Step 5/7 - Renderer");
   renderer.cleanup();
+  logShutdownStep("Shutdown Step 6/7 - Biome Registry");
   BiomeRegistry::instance().clear();
+  logShutdownStep("Shutdown Step 7/7 - Input");
   Input::shutdown();
 
   // --- 3. Engine & Window Shutdown ---
+  RuntimeAppInternal::printBootstrapInfo("Shutdown Step 8/8 - Engine and window");
   ENGINE::SHUTDOWN();
   Bootstrap::shutdownWindow(window);
   window = nullptr;
+  RuntimeAppInternal::printBootstrapSuccess("Game runtime shutdown complete.");
 }
 
 [[noreturn]] void terminateRuntimeProcess(int code) {

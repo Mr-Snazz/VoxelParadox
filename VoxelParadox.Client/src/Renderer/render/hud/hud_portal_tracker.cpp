@@ -78,6 +78,42 @@ void hudPortalTracker::closeMenu() {
     hoveredIndex = -1;
 }
 
+WorldSaveService::PlayerData::PortalTrackerState
+hudPortalTracker::capturePersistentState() const {
+    WorldSaveService::PlayerData::PortalTrackerState state;
+    state.trackingActive = trackingActive;
+    state.trackedBlock = trackedBlock;
+    state.trackedWorldSeed = trackedWorldSeed;
+    state.trackedWorldBiome = trackedWorldBiome;
+    state.trackedChildSeed = trackedChildSeed;
+    state.trackedChildBiome = trackedChildBiome;
+    state.trackedUniverseName = trackedUniverseName;
+    return state;
+}
+
+void hudPortalTracker::applyPersistentState(
+    const WorldSaveService::PlayerData::PortalTrackerState& state) {
+    if (!state.trackingActive) {
+        clearTracking();
+        return;
+    }
+
+    trackingActive = true;
+    trackedBlock = state.trackedBlock;
+    trackedWorldSeed = state.trackedWorldSeed;
+    trackedWorldBiome = state.trackedWorldBiome;
+    trackedChildSeed = state.trackedChildSeed;
+    trackedChildBiome = state.trackedChildBiome;
+    trackedUniverseName = state.trackedUniverseName;
+    waypointFade = 0.0f;
+    waypointDeactivateWhenHidden = false;
+    waypointVisibleThisFrame = false;
+    waypointOffscreen = false;
+    waypointScreenPos = glm::vec2(0.0f);
+    waypointLabel.clear();
+    closeMenu();
+}
+
 void hudPortalTracker::refreshEntries() {
     entries.clear();
     if (!player || !worldStack) {

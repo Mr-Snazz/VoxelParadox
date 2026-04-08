@@ -111,7 +111,18 @@ glm::ivec2 recommendedMonitorResolution() {
 
 std::string resolutionSelectionText(
     const GameSettings& settings,
-    const std::vector<glm::ivec2>& availableResolutions) {
+    const std::vector<glm::ivec2>& availableResolutions,
+    bool locked) {
+  if (locked) {
+    const glm::vec2 monitorSize = ENGINE::GETMONITORSIZE();
+    if (monitorSize.x > 0.0f && monitorSize.y > 0.0f) {
+      return resolutionDisplayText(glm::ivec2(
+          static_cast<int>(monitorSize.x + 0.5f),
+          static_cast<int>(monitorSize.y + 0.5f))) + " (Locked)";
+    }
+    return resolutionDisplayText(settings.resolution) + " (Locked)";
+  }
+
   if (availableResolutions.empty()) {
     return resolutionDisplayText(settings.resolution);
   }
@@ -366,7 +377,10 @@ bool applyPendingSettings(Player& player, WorldStack& worldStack,
     std::printf("[Settings] Window mode: %s\n",
                 Bootstrap::viewportModeName(pendingSettings.windowMode));
     std::printf("[Settings] Resolution: %s\n",
-                resolutionDisplayText(pendingSettings.resolution).c_str());
+                resolutionSelectionText(
+                    pendingSettings, {}, pendingSettings.windowMode ==
+                                           ENGINE::VIEWPORTMODE::BORDERLESS)
+                    .c_str());
   }
 
   if (appliedSettings.vSyncEnabled != pendingSettings.vSyncEnabled) {
@@ -488,6 +502,14 @@ HUDLayout makeSettingsValueLayout(float yOffset, float columnOffset) {
 namespace RuntimeUI {
 
 glm::ivec2 appliedViewportSizeForSettings(const GameSettings& settings) {
+  if (settings.windowMode == ENGINE::VIEWPORTMODE::BORDERLESS) {
+    const glm::vec2 monitorSize = ENGINE::GETMONITORSIZE();
+    if (monitorSize.x > 0.0f && monitorSize.y > 0.0f) {
+      return glm::ivec2(static_cast<int>(monitorSize.x + 0.5f),
+                        static_cast<int>(monitorSize.y + 0.5f));
+    }
+  }
+
   return settings.resolution;
 }
 

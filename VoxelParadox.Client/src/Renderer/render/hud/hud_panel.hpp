@@ -19,6 +19,10 @@ public:
     // Detalhe: usa 'color', 'visible' para encapsular esta etapa especifica do subsistema.
     explicit hudPanel(const glm::vec4& color,
                       const std::function<bool()>& visible = {});
+    // Funcao: executa 'hudPanel' no painel base do HUD.
+    // Detalhe: usa 'color', 'layout', 'size', 'visible' para encapsular esta etapa especifica do subsistema.
+    hudPanel(const glm::vec4& color, const HUDLayout& layout, glm::vec2 size,
+             const std::function<bool()>& visible = {});
 
     // Funcao: renderiza 'draw' no painel base do HUD.
     // Detalhe: usa 'shader', 'screenWidth', 'screenHeight' para desenhar a saida visual correspondente usando o estado atual.
@@ -26,6 +30,9 @@ public:
 
 private:
     glm::vec4 color;
+    bool useLayout = false;
+    HUDLayout layoutSpec{};
+    glm::vec2 sizeAmt{0.0f};
     // Funcao: executa 'bool' no painel base do HUD.
     // Detalhe: centraliza a logica necessaria para encapsular esta etapa especifica do subsistema.
     // Retorno: devolve 'std::function<' com o resultado composto por esta chamada.

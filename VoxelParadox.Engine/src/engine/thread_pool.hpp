@@ -3,6 +3,8 @@
 // Fluxo: centraliza jobs de background para evitar explosão de `std::thread` no streaming de chunks.
 // Dependências principais: `std::thread`, `std::mutex` e `std::condition_variable`.
 #pragma once
+#include <cstdio>
+#include <exception>
 #include <vector>
 #include <queue>
 #include <thread>
@@ -49,7 +51,18 @@ public:
                             task = std::move(this->tasks.front());
                             this->tasks.pop();
                         }
-                        task();
+                        try {
+                            task();
+                        } catch (const std::exception& exception) {
+                            std::fprintf(stderr,
+                                         "[ThreadPool][WARN] Worker task threw an exception: %s\n",
+                                         exception.what());
+                            std::fflush(stderr);
+                        } catch (...) {
+                            std::fprintf(stderr,
+                                         "[ThreadPool][WARN] Worker task threw an unknown exception.\n");
+                            std::fflush(stderr);
+                        }
                     }
                 }
             );

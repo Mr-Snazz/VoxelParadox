@@ -17,14 +17,26 @@
 hudPanel::hudPanel(const glm::vec4& color, const std::function<bool()>& visible)
     : color(color), visible(visible) {}
 
+// Funcao: executa 'hudPanel' no painel base do HUD.
+// Detalhe: usa 'color', 'layout', 'size', 'visible' para encapsular esta etapa especifica do subsistema.
+hudPanel::hudPanel(const glm::vec4& color, const HUDLayout& layout, glm::vec2 size,
+                   const std::function<bool()>& visible)
+    : color(color), useLayout(true), layoutSpec(layout), sizeAmt(size), visible(visible) {}
+
 // Funcao: renderiza 'draw' no painel base do HUD.
 // Detalhe: usa 'shader', 'screenWidth', 'screenHeight' para desenhar a saida visual correspondente usando o estado atual.
 void hudPanel::draw(Shader& shader, int screenWidth, int screenHeight) {
     if (visible && !visible()) return;
 
+    const glm::vec2 drawSize = useLayout ? sizeAmt : glm::vec2((float)screenWidth, (float)screenHeight);
+    glm::vec2 drawPos(0.0f, 0.0f);
+    if (useLayout) {
+        drawPos = resolveHUDPosition(layoutSpec, screenWidth, screenHeight, drawSize);
+    }
+
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3((float)screenWidth, (float)screenHeight, 1.0f));
+    model = glm::translate(model, glm::vec3(drawPos, 0.0f));
+    model = glm::scale(model, glm::vec3(drawSize, 1.0f));
 
     shader.setMat4("model", model);
     shader.setInt("isText", 0);

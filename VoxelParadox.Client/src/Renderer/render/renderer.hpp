@@ -223,6 +223,8 @@ private:
     void renderWorldBlockModels(const FractalWorld& world, const glm::mat4& vp,
                                 const glm::vec3& cameraPos, const glm::vec4& fog, int depth,
                                 int renderDistance, float time, float alpha = 1.0f);
+    void renderTargetSelectionWireframe(const FractalWorld& world, const Player& player,
+                                        const glm::mat4& vp);
     void renderCrosshair();
     void setBreakEffectUniforms(const glm::vec3& blockCenter, float breakProgress);
     void setHighlightEffectUniforms(const glm::vec3& blockCenter, float active);

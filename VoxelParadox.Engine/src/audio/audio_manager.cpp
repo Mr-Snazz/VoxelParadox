@@ -176,7 +176,20 @@ struct AudioManager::Impl {
     stopMusicPreloadWorker();
 
     musicPreloadWorkerStopRequested = false;
-    musicPreloadWorker = std::thread([this] { runMusicPreloadWorker(); });
+    musicPreloadWorker = std::thread([this] {
+      try {
+        runMusicPreloadWorker();
+      } catch (const std::exception& exception) {
+        std::fprintf(stderr,
+                     "[Audio][WARN] Music preload worker terminated with an exception: %s\n",
+                     exception.what());
+        std::fflush(stderr);
+      } catch (...) {
+        std::fprintf(stderr,
+                     "[Audio][WARN] Music preload worker terminated with an unknown exception.\n");
+        std::fflush(stderr);
+      }
+    });
   }
 
   void stopMusicPreloadWorker() {
@@ -229,20 +242,46 @@ struct AudioManager::Impl {
         job.state->decodedData.reset();
         job.state->error = std::move(error);
       } catch (const std::exception& exception) {
-        std::scoped_lock<std::mutex> stateLock(job.state->mutex);
-        job.state->status = MusicDecodeState::Status::Failed;
-        job.state->decodedData.reset();
-        job.state->error =
-            "Music preload threw an exception for '" + job.path.string() + "': " +
-            exception.what();
-        logAudioMessage("WARN", job.state->error);
+        {
+          std::scoped_lock<std::mutex> stateLock(job.state->mutex);
+          job.state->status = MusicDecodeState::Status::Failed;
+          job.state->decodedData.reset();
+        }
+
+        try {
+          const std::string error =
+              "Music preload threw an exception for '" + job.path.string() + "': " +
+              exception.what();
+          {
+            std::scoped_lock<std::mutex> stateLock(job.state->mutex);
+            job.state->error = error;
+          }
+          logAudioMessage("WARN", error);
+        } catch (...) {
+          std::fprintf(stderr,
+                       "[Audio][WARN] Music preload failed after an exception, and the error message could not be materialized.\n");
+          std::fflush(stderr);
+        }
       } catch (...) {
-        std::scoped_lock<std::mutex> stateLock(job.state->mutex);
-        job.state->status = MusicDecodeState::Status::Failed;
-        job.state->decodedData.reset();
-        job.state->error =
-            "Music preload threw an unknown exception for '" + job.path.string() + "'.";
-        logAudioMessage("WARN", job.state->error);
+        {
+          std::scoped_lock<std::mutex> stateLock(job.state->mutex);
+          job.state->status = MusicDecodeState::Status::Failed;
+          job.state->decodedData.reset();
+        }
+
+        try {
+          const std::string error =
+              "Music preload threw an unknown exception for '" + job.path.string() + "'.";
+          {
+            std::scoped_lock<std::mutex> stateLock(job.state->mutex);
+            job.state->error = error;
+          }
+          logAudioMessage("WARN", error);
+        } catch (...) {
+          std::fprintf(stderr,
+                       "[Audio][WARN] Music preload failed with an unknown exception, and the error message could not be materialized.\n");
+          std::fflush(stderr);
+        }
       }
     }
   }
@@ -1308,7 +1347,8 @@ struct AudioManager::Impl {
         primary ? contextDefinitionForName(primary->contextName) : nullptr;
     const float transitionSeconds =
         immediateStart ? musicTransitionSeconds(fromContext, context) : 0.0f;
-    const float startGain = primary ? 0.0f : 1.0f;
+    const float startGain =
+        primary ? 0.0f : (transitionSeconds > 0.0f ? 0.0f : 1.0f);
     const float targetGain = 1.0f;
     if (!startMusicTrack(newStreamIndex, context, track, startGain, targetGain,
                          transitionSeconds)) {
@@ -1401,7 +1441,7 @@ struct AudioManager::Impl {
     if (!primary) {
       const MusicTrackDefinition* firstTrack = consumeNextMusicTrack(*desiredMusicContext);
       if (firstTrack) {
-        transitionToTrack(*desiredMusicContext, *firstTrack, false);
+        transitionToTrack(*desiredMusicContext, *firstTrack, true);
       }
       musicImmediateRequest = false;
       return;

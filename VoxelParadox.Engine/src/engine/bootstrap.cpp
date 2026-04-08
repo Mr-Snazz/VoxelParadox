@@ -263,10 +263,8 @@ void configureWindowHints(const Config& config) {
 }
 
 GLFWwindow* createMainWindow(const Config& config) {
-  const glm::vec2 defaultViewportSize = ENGINE::GETDEFAULTVIEWPORTSIZE();
   GLFWwindow* window =
-      glfwCreateWindow(static_cast<int>(defaultViewportSize.x),
-                       static_cast<int>(defaultViewportSize.y),
+      glfwCreateWindow(config.windowSize.x, config.windowSize.y,
                        config.windowTitle.c_str(), nullptr, nullptr);
   if (!window) {
     return nullptr;
@@ -274,6 +272,11 @@ GLFWwindow* createMainWindow(const Config& config) {
 
   ENGINE::ATTACHWINDOW(window);
   glfwMakeContextCurrent(window);
+
+  if (config.viewportMode == ENGINE::VIEWPORTMODE::BORDERLESS) {
+    glfwMaximizeWindow(window);
+  }
+
   ENGINE::SETVSYNC(config.vSyncEnabled);
   return window;
 }

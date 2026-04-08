@@ -548,27 +548,42 @@ void addSettingsMenuHUD(
 
   const auto addArrowButton = [&](const char* groupName, const char* text,
                                   float xOffset, float yOffset,
-                                  const std::function<void()>& onClick) {
+                                  const std::function<void()>& onClick,
+                                  const std::function<bool()>& visible = {}) {
     HUD::add(attachToHUDGroup(
         new hudButtonText(text,
                           makeCenteredMenuButtonPositioner(yOffset, xOffset), 26,
-                          buttonColor, buttonHoverColor, onClick),
+                          buttonColor, buttonHoverColor, onClick, visible),
         groupName));
   };
 
   const auto addSettingRow = [&](const char* groupName, const char* label,
-                                 float yOffset, auto binder,
+                                 float yOffset,
+                                 const std::function<void(std::string&)>& binder,
                                  const std::function<void()>& onPrevious,
-                                 const std::function<void()>& onNext) {
+                                 const std::function<void()>& onNext,
+                                 const std::function<bool()>& enabled = {}) {
+    const bool hasEnabledPredicate = static_cast<bool>(enabled);
+    const glm::vec3 disabledValueColor(0.60f, 0.64f, 0.72f);
+
     addRowLabel(groupName, label, yOffset);
     if (auto* value = attachToHUDGroup(
             HUD::watchText(binder, makeSettingsValueLayout(yOffset),
                            glm::vec2(1.0f), 22),
             groupName)) {
-      value->setColor(valueColor);
+      if (hasEnabledPredicate) {
+        value->setVisualBinder(
+            [enabled, valueColor, disabledValueColor](hudWatchText& text) {
+              text.setColor(enabled() ? valueColor : disabledValueColor);
+            });
+      } else {
+        value->setColor(valueColor);
+      }
     }
-    addArrowButton(groupName, "<", arrowLeftX, yOffset - 13, onPrevious);
-    addArrowButton(groupName, ">", arrowRightX, yOffset - 13, onNext);
+    addArrowButton(groupName, "<", arrowLeftX, yOffset - 13, onPrevious,
+                   hasEnabledPredicate ? enabled : std::function<bool()>{});
+    addArrowButton(groupName, ">", arrowRightX, yOffset - 13, onNext,
+                   hasEnabledPredicate ? enabled : std::function<bool()>{});
   };
 
   addSettingRow(
@@ -618,13 +633,18 @@ void addSettingsMenuHUD(
   addSettingRow(
       generalGroup, "Resolution", generalRowStart + generalRowStep * 4.0f,
       [&pendingSettings, &availableResolutions](std::string& out) {
-        out = resolutionSelectionText(pendingSettings, availableResolutions);
+        out = resolutionSelectionText(
+            pendingSettings, availableResolutions,
+            pendingSettings.windowMode == ENGINE::VIEWPORTMODE::BORDERLESS);
       },
       [&pendingSettings, &availableResolutions]() {
         stepResolutionSelection(pendingSettings, availableResolutions, -1);
       },
       [&pendingSettings, &availableResolutions]() {
         stepResolutionSelection(pendingSettings, availableResolutions, 1);
+      },
+      [&pendingSettings]() {
+        return pendingSettings.windowMode != ENGINE::VIEWPORTMODE::BORDERLESS;
       });
   addSettingRow(
       generalGroup, "Window Mode", generalRowStart + generalRowStep * 5.0f,

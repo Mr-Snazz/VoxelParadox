@@ -303,6 +303,7 @@ void HUD::render(int screenWidth, int screenHeight) {
     for (HUDElement* el : activeElements) {
         hudShader.use();
         hudShader.setMat4("projection", projection);
+        hudShader.setInt("image", 0);
         el->draw(hudShader, screenWidth, screenHeight);
     }
 

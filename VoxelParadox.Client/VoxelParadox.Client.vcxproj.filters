@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="18.0">
   <ItemGroup>
     <Filter Include="src">
@@ -58,12 +58,12 @@
     <Filter Include="src\World">
       <UniqueIdentifier>{D7D7C404-7309-4A9D-AA30-948AC9138806}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\World\world">
-      <UniqueIdentifier>{024B4401-8E99-4CF1-A43B-D7759B1B8A90}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core\support\game_pch.cpp">
+      <Filter>src\Core\support</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\support\crash_handler.cpp">
       <Filter>src\Core\support</Filter>
     </ClCompile>
     <ClCompile Include="src\Systems\audio\game_audio_controller.cpp">
@@ -124,6 +124,9 @@
       <Filter>src\Renderer\render\hud</Filter>
     </ClCompile>
     <ClCompile Include="src\Renderer\render\hud\hud_button_text.cpp">
+      <Filter>src\Renderer\render\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\render\hud\hud_chat_background.cpp">
       <Filter>src\Renderer\render\hud</Filter>
     </ClCompile>
     <ClCompile Include="src\Renderer\render\hud\hud_hotbar.cpp">
@@ -187,22 +190,22 @@
       <Filter>src\UI\ui</Filter>
     </ClCompile>
     <ClCompile Include="src\World\world\biome_preset.cpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClCompile>
     <ClCompile Include="src\World\world\biome_preset_defaults.cpp">
-      <Filter>src\World\world</Filter>
-    </ClCompile>
-    <ClCompile Include="src\World\world\world_spawn_locator.cpp">
-      <Filter>src\World\world</Filter>
-    </ClCompile>
-    <ClCompile Include="src\World\world\world_stack.cpp">
-      <Filter>src\World\world</Filter>
-    </ClCompile>
-    <ClCompile Include="src\World\world\world_stack_persistence.cpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClCompile>
     <ClCompile Include="src\World\world\world_save_service.cpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\world\world_spawn_locator.cpp">
+      <Filter>src\World</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\world\world_stack.cpp">
+      <Filter>src\World</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\world\world_stack_persistence.cpp">
+      <Filter>src\World</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -211,6 +214,9 @@
     </ClInclude>
     <ClInclude Include="src\Core\config\client_defaults.hpp">
       <Filter>src\Core\config</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\support\crash_handler.hpp">
+      <Filter>src\Core\support</Filter>
     </ClInclude>
     <ClInclude Include="src\Systems\audio\game_audio_controller.hpp">
       <Filter>src\Systems\audio</Filter>
@@ -267,6 +273,9 @@
       <Filter>src\Renderer\render\hud</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\render\hud\hud_button_text.hpp">
+      <Filter>src\Renderer\render\hud</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\render\hud\hud_chat_background.hpp">
       <Filter>src\Renderer\render\hud</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\render\hud\hud_element.hpp">
@@ -357,49 +366,49 @@
       <Filter>src\UI\ui</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\biome.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\biome_preset.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\biome_preset_internal.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\biome_registry.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\block.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\chunk.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\chunk_generator_source.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\fractal_world.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\noise.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\vox_asset.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\vox_structure.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\world_generator.hpp">
-      <Filter>src\World\world</Filter>
-    </ClInclude>
-    <ClInclude Include="src\World\world\world_spawn_locator.hpp">
-      <Filter>src\World\world</Filter>
-    </ClInclude>
-    <ClInclude Include="src\World\world\world_stack.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\World\world\world_save_service.hpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\world_spawn_locator.hpp">
+      <Filter>src\World</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\world\world_stack.hpp">
+      <Filter>src\World</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -407,10 +416,10 @@
       <Filter>src\UI\ui</Filter>
     </None>
     <None Include="src\World\world\biome_registry.cpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </None>
     <None Include="src\World\world\chunk_generator_source.cpp">
-      <Filter>src\World\world</Filter>
+      <Filter>src\World</Filter>
     </None>
   </ItemGroup>
 </Project>

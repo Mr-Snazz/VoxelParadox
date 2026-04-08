@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "core/support/text_input.hpp"
+
 class Player;
 class WorldStack;
 
@@ -44,14 +46,12 @@ private:
   static constexpr int kVisibleSuggestionLines = 4;
 
   bool open_ = false;
-  std::string inputBuffer_;
+  TextInputState inputState_;
   std::string lastSubmittedInput_;
   std::deque<Entry> history_;
-  double nextBackspaceRepeatTime_ = -1.0;
 
   void pushHistory(const std::string& text);
   void submit(GameChatCommandContext& commandContext);
-  void eraseLastCharacter();
   bool shouldShowHistory() const;
   bool shouldShowSuggestions() const;
   void autocompleteInput();

@@ -14,6 +14,7 @@
 #include <deque>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -70,8 +71,14 @@ struct ChunkData {
 };
 
 struct AsyncChunkState {
+    struct FailedChunk {
+        glm::ivec3 pos{0};
+        std::string error;
+    };
+
     std::mutex readyMutex;
     std::vector<std::unique_ptr<ChunkData>> readyChunks;
+    std::vector<FailedChunk> failedChunks;
     std::atomic<bool> acceptingResults{true};
     std::atomic<int> queuedChunkGenerations{0};
 };
@@ -320,34 +327,39 @@ public:
 #pragma endregion
 
 #pragma region FractalWorldAsyncAndQueries
-    void captureGeneratedPersistentBlockSpawns(
+    void pruneRedundantSparseEditsForChunk(
         const glm::ivec3& chunkPos,
         const BlockType blocks[Chunk::SIZE][Chunk::SIZE][Chunk::SIZE]) {
-        // Decorative spawns such as membrane_wire start deterministic from the seed,
-        // then become part of the universe save once a chunk is generated.
-        const glm::ivec3 base = chunkPos * Chunk::SIZE;
-        bool capturedAny = false;
-
-        for (int x = 0; x < Chunk::SIZE; x++) {
-            for (int y = 0; y < Chunk::SIZE; y++) {
-                for (int z = 0; z < Chunk::SIZE; z++) {
-                    const BlockType type = blocks[x][y][z];
-                    if (type != BlockType::MEMBRANE_WIRE) {
-                        continue;
-                    }
-
-                    const glm::ivec3 worldPos = base + glm::ivec3(x, y, z);
-                    if (modifications.find(worldPos) != modifications.end()) {
-                        continue;
-                    }
-
-                    modifications.emplace(worldPos, type);
-                    capturedAny = true;
-                }
-            }
+        // Procedural decoration such as membrane_wire is deterministic from the seed.
+        // Persist only the player's edits, not the untouched generated result.
+        if (sparseEditIndexDirty) {
+            rebuildSparseEditIndex();
         }
 
-        if (capturedAny) {
+        const auto chunkEditIt = chunkModifications.find(chunkPos);
+        if (chunkEditIt == chunkModifications.end()) {
+            return;
+        }
+
+        bool removedAny = false;
+        for (const auto& [worldPos, modifiedType] : chunkEditIt->second) {
+            const glm::ivec3 localPos = worldToLocalPos(worldPos);
+            const BlockType generatedType =
+                blocks[localPos.x][localPos.y][localPos.z];
+            if (generatedType != modifiedType) {
+                continue;
+            }
+
+            auto modificationIt = modifications.find(worldPos);
+            if (modificationIt == modifications.end()) {
+                continue;
+            }
+
+            modifications.erase(modificationIt);
+            removedAny = true;
+        }
+
+        if (removedAny) {
             sparseEditIndexDirty = true;
         }
     }
@@ -355,19 +367,51 @@ public:
     void processReadyChunks(glm::ivec3 center, const glm::vec3& viewForward) {
         // Resultados prontos entram aqui para que a thread de geracao nunca toque em `Chunk` com recursos OpenGL vivos.
         std::vector<std::unique_ptr<ChunkData>> localReady;
+        std::vector<AsyncChunkState::FailedChunk> localFailures;
         if (!asyncChunkState) return;
         {
             std::lock_guard<std::mutex> lock(asyncChunkState->readyMutex);
-            if (asyncChunkState->readyChunks.empty()) {
+            if (asyncChunkState->readyChunks.empty() &&
+                asyncChunkState->failedChunks.empty()) {
                 return;
             }
             localReady = std::move(asyncChunkState->readyChunks);
             asyncChunkState->readyChunks.clear();
+            localFailures = std::move(asyncChunkState->failedChunks);
+            asyncChunkState->failedChunks.clear();
+        }
+
+        for (const auto& failure : localFailures) {
+            auto it = chunks.find(failure.pos);
+            if (it != chunks.end()) {
+                removeChunkOccupancy(failure.pos);
+                chunks.erase(it);
+            }
+
+            if (!failure.error.empty()) {
+                std::printf("[World][WARN] Chunk generation failed at (%d, %d, %d): %s\n",
+                            failure.pos.x, failure.pos.y, failure.pos.z,
+                            failure.error.c_str());
+                std::fflush(stdout);
+            }
+        }
+
+        localReady.erase(
+            std::remove_if(localReady.begin(), localReady.end(),
+                           [](const std::unique_ptr<ChunkData>& data) {
+                               return data == nullptr;
+                           }),
+            localReady.end());
+        if (localReady.empty()) {
+            return;
         }
 
         std::sort(localReady.begin(), localReady.end(),
                   [this, center, &viewForward](const std::unique_ptr<ChunkData>& a,
                                                const std::unique_ptr<ChunkData>& b) {
+                      if (!a || !b) {
+                          return static_cast<bool>(a);
+                      }
                       return prefersChunkOffset(a->pos - center, b->pos - center,
                                                 viewForward);
                   });
@@ -391,7 +435,7 @@ public:
             }
 
             Chunk* ptr = it->second.get();
-            captureGeneratedPersistentBlockSpawns(data->pos, data->blocks);
+            pruneRedundantSparseEditsForChunk(data->pos, data->blocks);
             memcpy(ptr->blocks, data->blocks, sizeof(ptr->blocks));
             applySparseEditsToChunk(*ptr);
             ptr->generated = true;
@@ -405,7 +449,9 @@ public:
         if (!deferredReady.empty()) {
             std::lock_guard<std::mutex> lock(asyncChunkState->readyMutex);
             for (auto& data : deferredReady) {
-                asyncChunkState->readyChunks.push_back(std::move(data));
+                if (data) {
+                    asyncChunkState->readyChunks.push_back(std::move(data));
+                }
             }
         }
     }
@@ -443,7 +489,7 @@ public:
         }
 
         generator.generate(*ptr);
-        captureGeneratedPersistentBlockSpawns(cp, ptr->blocks);
+        pruneRedundantSparseEditsForChunk(cp, ptr->blocks);
         applySparseEditsToChunk(*ptr);
         ptr->generated = true;
         ptr->generating = false;
@@ -461,10 +507,29 @@ public:
         return it != chunks.end() ? it->second.get() : nullptr;
     }
 
+    // Funcao: retorna 'getChunkIfLoaded' no mundo fractal ativo.
+    // Detalhe: usa 'cp' para expor um dado derivado ou um acesso controlado ao estado interno.
+    // Retorno: devolve 'Chunk*' para dar acesso direto ao objeto resolvido por esta rotina.
+    Chunk* getChunkIfLoaded(glm::ivec3 cp) const {
+        auto it = chunks.find(cp);
+        return it != chunks.end() ? it->second.get() : nullptr;
+    }
+
     // Funcao: retorna 'getBlock' no mundo fractal ativo.
     // Detalhe: usa 'wp' para expor um dado derivado ou um acesso controlado ao estado interno.
     // Retorno: devolve 'BlockType' com o resultado composto por esta chamada.
     BlockType getBlock(glm::ivec3 wp) {
+        glm::ivec3 cp = worldToChunkPos(wp);
+        glm::ivec3 lp = worldToLocalPos(wp);
+        Chunk* c = getChunkIfLoaded(cp);
+        if (!c || !c->generated) return BlockType::AIR;
+        return c->getBlock(lp.x, lp.y, lp.z);
+    }
+
+    // Funcao: retorna 'getBlock' no mundo fractal ativo.
+    // Detalhe: usa 'wp' para expor um dado derivado ou um acesso controlado ao estado interno.
+    // Retorno: devolve 'BlockType' com o resultado composto por esta chamada.
+    BlockType getBlock(glm::ivec3 wp) const {
         glm::ivec3 cp = worldToChunkPos(wp);
         glm::ivec3 lp = worldToLocalPos(wp);
         Chunk* c = getChunkIfLoaded(cp);
@@ -508,6 +573,7 @@ public:
             worldToChunkPos(glm::ivec3(glm::floor(cullingCameraPos)));
         const int rd = renderDistance;
         const int rd2 = rd * rd;
+        const int verticalRadius = verticalChunkRadius();
         const auto renderStart = std::chrono::steady_clock::now();
 
         ENGINE::Visibility::ClusterVisibilityContext visibilityContext{};
@@ -530,6 +596,9 @@ public:
             }
 
             glm::ivec3 d = pos - center;
+            if (std::abs(d.y) > verticalRadius) {
+                continue;
+            }
             const int dist2 = d.x * d.x + d.y * d.y + d.z * d.z;
             if (dist2 > rd2) continue;
 
@@ -745,6 +814,11 @@ private:
         return it != chunkSolidVoxelCounts.end() ? it->second : 0;
     }
 
+    int verticalChunkRadius() const {
+        // Infinite-Y streaming is much more expensive than the horizontal shell.
+        return std::clamp(2 + renderDistance / 3, 2, 5);
+    }
+
     void refreshChunkOccupancy(glm::ivec3 cp) {
         Chunk* chunk = getChunkIfLoaded(cp);
         if (!chunk || !chunk->generated) {
@@ -840,10 +914,11 @@ private:
         const int workerCount =
             std::max(1, static_cast<int>(chunkThreadPool.threadCount()));
         const int distanceScale = std::clamp(renderDistance, 2, 10);
+        const int verticalScale = verticalChunkRadius();
         maxQueuedChunkGenerations =
-            std::clamp(4 + workerCount * 2 + distanceScale / 2, 6, 24);
-        maxReadyChunksPerFrame = std::clamp(1 + workerCount, 2, 6);
-        maxMeshesPerFrame = std::clamp(1 + workerCount / 2, 1, 3);
+            std::clamp(3 + workerCount + distanceScale / 3 + verticalScale, 4, 12);
+        maxReadyChunksPerFrame = std::clamp(1 + workerCount / 2, 2, 4);
+        maxMeshesPerFrame = std::clamp(1 + workerCount / 3, 1, 2);
     }
 
     // Funcao: normaliza 'sanitizeViewForward' no mundo fractal ativo.
@@ -975,35 +1050,66 @@ private:
                 return;
             }
 
-            const auto finishTask = [&state]() {
-                state->queuedChunkGenerations.fetch_sub(1, std::memory_order_relaxed);
+            struct TaskGuard {
+                std::shared_ptr<AsyncChunkState> state;
+                ~TaskGuard() {
+                    if (state) {
+                        state->queuedChunkGenerations.fetch_sub(
+                            1, std::memory_order_relaxed);
+                    }
+                }
             };
+            TaskGuard guard{state};
 
             if (!state->acceptingResults.load(std::memory_order_acquire)) {
-                finishTask();
                 return;
             }
 
-            auto data = std::make_unique<ChunkData>();
-            data->pos = cp;
+            try {
+                auto data = std::make_unique<ChunkData>();
+                data->pos = cp;
 
-            Chunk temp(cp);
-            genCopy.generate(temp);
-            memcpy(data->blocks, temp.blocks, sizeof(temp.blocks));
+                Chunk temp(cp);
+                genCopy.generate(temp);
+                memcpy(data->blocks, temp.blocks, sizeof(temp.blocks));
 
-            if (!state->acceptingResults.load(std::memory_order_acquire)) {
-                finishTask();
-                return;
-            }
+                if (!state->acceptingResults.load(std::memory_order_acquire)) {
+                    return;
+                }
 
-            {
-                std::lock_guard<std::mutex> lock(state->readyMutex);
-                if (state->acceptingResults.load(std::memory_order_relaxed)) {
-                    state->readyChunks.push_back(std::move(data));
+                {
+                    std::lock_guard<std::mutex> lock(state->readyMutex);
+                    if (state->acceptingResults.load(std::memory_order_relaxed)) {
+                        state->readyChunks.push_back(std::move(data));
+                    }
+                }
+            } catch (const std::exception& exception) {
+                try {
+                    std::lock_guard<std::mutex> lock(state->readyMutex);
+                    if (state->acceptingResults.load(std::memory_order_relaxed)) {
+                        state->failedChunks.push_back(
+                            {cp, std::string(exception.what())});
+                    }
+                } catch (...) {
+                    std::fprintf(stderr,
+                                 "[World][WARN] Chunk generation failed at (%d, %d, %d), and the failure could not be queued safely.\n",
+                                 cp.x, cp.y, cp.z);
+                    std::fflush(stderr);
+                }
+            } catch (...) {
+                try {
+                    std::lock_guard<std::mutex> lock(state->readyMutex);
+                    if (state->acceptingResults.load(std::memory_order_relaxed)) {
+                        state->failedChunks.push_back(
+                            {cp, "unknown exception"});
+                    }
+                } catch (...) {
+                    std::fprintf(stderr,
+                                 "[World][WARN] Chunk generation failed at (%d, %d, %d) with an unknown exception, and the failure could not be queued safely.\n",
+                                 cp.x, cp.y, cp.z);
+                    std::fflush(stderr);
                 }
             }
-
-            finishTask();
         });
         return true;
     }
@@ -1068,11 +1174,14 @@ private:
         chunkLoadOffsets.clear();
 
         const int rd = renderDistance;
+        const int verticalRadius = verticalChunkRadius();
         const int side = (rd * 2) + 1;
-        chunkLoadOffsets.reserve(static_cast<size_t>(side) * side * side);
+        chunkLoadOffsets.reserve(static_cast<size_t>(side) *
+                                 static_cast<size_t>((verticalRadius * 2) + 1) *
+                                 static_cast<size_t>(side));
 
         for (int x = -rd; x <= rd; x++)
-        for (int y = -rd; y <= rd; y++)
+        for (int y = -verticalRadius; y <= verticalRadius; y++)
         for (int z = -rd; z <= rd; z++) {
             chunkLoadOffsets.push_back(glm::ivec3(x, y, z));
         }
@@ -1194,11 +1303,13 @@ private:
     // Funcao: executa 'unloadDistantChunks' no mundo fractal ativo.
     // Detalhe: usa 'center' para encapsular esta etapa especifica do subsistema.
     void unloadDistantChunks(glm::ivec3 center) {
-        int maxDist = renderDistance + 3;
+        const int maxDistXZ = renderDistance + 3;
+        const int maxDistY = verticalChunkRadius() + 2;
         std::vector<glm::ivec3> toRemove;
         for (auto& [pos, chunk] : chunks) {
             glm::ivec3 d = pos - center;
-            if (std::abs(d.x) > maxDist || std::abs(d.y) > maxDist || std::abs(d.z) > maxDist) {
+            if (std::abs(d.x) > maxDistXZ || std::abs(d.y) > maxDistY ||
+                std::abs(d.z) > maxDistXZ) {
                 if (!chunk->generating) {
                     toRemove.push_back(pos);
                 }

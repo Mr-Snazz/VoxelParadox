@@ -4,6 +4,16 @@
 #include <cstdlib>
 #include <iostream>
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
+#ifdef FAR
+#undef FAR
+#endif
+#endif
+
 #include "enemies/enemy_system.hpp"
 #include "world_spawn_locator.hpp"
 
@@ -12,6 +22,44 @@
 // - descend/ascend traversal
 // - render/update forwarding
 // - nested preview world management
+
+namespace {
+
+std::uint64_t queryTotalPhysicalMemoryBytes() {
+#ifdef _WIN32
+    MEMORYSTATUSEX memoryStatus{};
+    memoryStatus.dwLength = sizeof(memoryStatus);
+    if (GlobalMemoryStatusEx(&memoryStatus) != 0) {
+        return static_cast<std::uint64_t>(memoryStatus.ullTotalPhys);
+    }
+#endif
+    return 0;
+}
+
+std::uint64_t totalPhysicalMemoryGiB() {
+    constexpr std::uint64_t kGiB = 1024ull * 1024ull * 1024ull;
+    const std::uint64_t totalBytes = queryTotalPhysicalMemoryBytes();
+    if (totalBytes == 0) {
+        return 0;
+    }
+    return (std::max<std::uint64_t>)(1, totalBytes / kGiB);
+}
+
+int capUltraRenderDistanceForMachine(int requestedDistance) {
+    const std::uint64_t totalRamGiB = totalPhysicalMemoryGiB();
+    if (totalRamGiB == 0) {
+        return (std::min)(requestedDistance, 8);
+    }
+    if (totalRamGiB <= 8) {
+        return (std::min)(requestedDistance, 8);
+    }
+    if (totalRamGiB <= 12) {
+        return (std::min)(requestedDistance, 9);
+    }
+    return requestedDistance;
+}
+
+} // namespace
 
 void WorldStack::setSaveWorldDirectory(const std::string& directory) {
     if (!directory.empty()) {
@@ -72,8 +120,9 @@ int WorldStack::configuredRenderDistanceFor(const FractalWorld& world) const {
     switch (renderDistancePreset) {
     case RenderDistancePreset::SHORT: return std::max(2, base - 2);
     case RenderDistancePreset::NORMAL: return base;
-    case RenderDistancePreset::FAR: return std::min(10, base + 2);
-    case RenderDistancePreset::ULTRA: return std::min(10, base + 5);
+    case RenderDistancePreset::FAR: return (std::min)(10, base + 2);
+    case RenderDistancePreset::ULTRA:
+        return capUltraRenderDistanceForMachine((std::min)(10, base + 5));
     }
     return base;
 }

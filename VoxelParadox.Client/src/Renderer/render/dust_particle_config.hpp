@@ -12,7 +12,7 @@
 struct DustParticleConfig {
     std::size_t initialBufferCapacity = 2048;
 
-    float cellSize = 3.5f;
+    float cellSize = 6.5f;
     float radius = 18.0f;
     int particlesPerCell = 3;
     int cellRadiusY = 3;

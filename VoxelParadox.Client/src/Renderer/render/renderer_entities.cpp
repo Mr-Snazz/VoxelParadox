@@ -14,6 +14,7 @@
 #include "enemies/enemy_runtime_helpers.hpp"
 #include "item_texture_cache.hpp"
 #include "renderer_internal.hpp"
+#include "world/block.hpp"
 
 namespace {
 
@@ -331,6 +332,53 @@ void appendWireBoxVertices(const glm::mat4& transform, const glm::vec3& halfExte
 }
 
 }  // namespace
+
+void Renderer::renderTargetSelectionWireframe(const FractalWorld& world,
+                                              const Player& player,
+                                              const glm::mat4& vp) {
+    if (!player.hasTarget) {
+        return;
+    }
+
+    const BlockType targetType = world.getBlock(player.targetBlock);
+    if (!canTargetBlock(targetType)) {
+        return;
+    }
+
+    glm::vec3 selectionMin(0.0f);
+    glm::vec3 selectionMax(1.0f);
+    if (!getBlockSelectionBounds(targetType, selectionMin, selectionMax)) {
+        return;
+    }
+
+    const glm::vec3 inflate(0.015f);
+    const glm::vec3 wireMin = selectionMin - inflate;
+    const glm::vec3 wireMax = selectionMax + inflate;
+    const glm::vec3 center = glm::vec3(player.targetBlock) + (wireMin + wireMax) * 0.5f;
+    const glm::vec3 halfExtents = (wireMax - wireMin) * 0.5f;
+
+    std::array<float, 72> vertices{};
+    appendWireBoxVertices(glm::translate(glm::mat4(1.0f), center), halfExtents, vertices);
+
+    lineShader.use();
+    lineShader.setMat4("uMVP", vp);
+    lineShader.setVec4("uColor", glm::vec4(0.0f, 0.0f, 0.0f, 0.95f));
+
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glLineWidth(1.0f);
+
+    glBindVertexArray(portalFrameVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, portalFrameVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
+    glDrawArrays(GL_LINES, 0, 24);
+    glBindVertexArray(0);
+
+    glLineWidth(1.0f);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_CULL_FACE);
+}
 
 void Renderer::renderEntities(const FractalWorld& world, const glm::mat4& vp,
                               const glm::vec3& cameraPos, const glm::vec4& fog,

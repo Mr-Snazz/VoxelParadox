@@ -230,6 +230,10 @@ namespace VoxelParadox {
 
             gameChat.setupHud();
             gameChat.syncHudState();
+            if (portalTracker && worldSession.playerData.hasPortalTrackerState) {
+                portalTracker->applyPersistentState(
+                    worldSession.playerData.portalTrackerState);
+            }
             RuntimeAppInternal::printBootstrapSuccess("HUD initialized!");
 
             // --- 8. Main Loop ---
@@ -248,6 +252,7 @@ namespace VoxelParadox {
             break;
         }
 
+        RuntimeAppInternal::printBootstrapInfo("Game exit requested. Beginning shutdown...");
         RuntimeAppInternal::shutdownGame(window, renderer, nullptr);
         RuntimeAppInternal::terminateRuntimeProcess(0);
 

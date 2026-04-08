@@ -22,7 +22,7 @@ class WorldStack;
 namespace WorldSaveService {
 
 inline constexpr std::uint32_t kWorldManifestVersion = 1;
-inline constexpr std::uint32_t kPlayerDataVersion = 1;
+inline constexpr std::uint32_t kPlayerDataVersion = 2;
 inline constexpr std::uint32_t kStatsVersion = 1;
 
 inline constexpr const char* kWorldFileName = "world.dat";
@@ -58,6 +58,16 @@ struct PlayerData {
     Player::PersistentState playerState{};
     std::uint32_t currentUniverseSeed = 0;
     BiomeSelection currentUniverseBiomeSelection{};
+    bool hasPortalTrackerState = false;
+    struct PortalTrackerState {
+        bool trackingActive = false;
+        glm::ivec3 trackedBlock{0};
+        std::uint32_t trackedWorldSeed = 0;
+        BiomeSelection trackedWorldBiome{};
+        std::uint32_t trackedChildSeed = 0;
+        BiomeSelection trackedChildBiome{};
+        std::string trackedUniverseName;
+    } portalTrackerState{};
     std::vector<WorldLevel> traversalStack{};
 };
 

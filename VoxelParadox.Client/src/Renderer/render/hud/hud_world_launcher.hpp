@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 
+#include "core/support/text_input.hpp"
 #include "hud_element.hpp"
 #include "world/world_save_service.hpp"
 
@@ -53,24 +54,17 @@ private:
     static constexpr std::size_t kMaxWorldNameLength = 48;
 
     std::vector<WorldSaveService::WorldSummary> worlds_{};
-    std::string typedWorldName_{};
     std::string statusMessage_{};
     ActionRequest pendingRequest_{};
+    TextInputState worldNameInput_{};
 
     int selectedIndex_ = -1;
     int hoveredIndex_ = -1;
     int scrollOffset_ = 0;
     int lastClickedIndex_ = -1;
     double lastClickTime_ = -1.0;
-    double nextBackspaceRepeatTime_ = -1.0;
-    double nextDeleteRepeatTime_ = -1.0;
-    double nextLeftRepeatTime_ = -1.0;
-    double nextRightRepeatTime_ = -1.0;
     bool textFieldFocused_ = false;
     bool loading_ = false;
-    std::size_t caretIndex_ = 0;
-    std::size_t selectionStart_ = 0;
-    std::size_t selectionEnd_ = 0;
     float caretPixelOffset_ = 0.0f;
     float selectionPixelStart_ = 0.0f;
     float selectionPixelEnd_ = 0.0f;

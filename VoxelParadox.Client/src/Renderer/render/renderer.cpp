@@ -685,6 +685,10 @@ void Renderer::renderScene(WorldStack& worldStack, Player& player, float aspect,
                            time, 1.0f);
     }
 
+    if (world && player.hasTarget && HUD::isVisible()) {
+        renderTargetSelectionWireframe(*world, player, vp);
+    }
+
     // --- 5. Nested Preview & Particles ---
     if ((player.nestedPreview.active || player.nestedPreview.fade > 0.001f) && world &&
         isSolid(world->getBlock(player.nestedPreview.block))) {

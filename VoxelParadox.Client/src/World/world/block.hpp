@@ -101,6 +101,23 @@ inline bool canTargetBlock(BlockType type) {
   return type != BlockType::AIR && type != BlockType::COUNT;
 }
 
+inline bool getBlockSelectionBounds(BlockType type, glm::vec3& outMin,
+                                    glm::vec3& outMax) {
+  if (type == BlockType::AIR || type == BlockType::COUNT) {
+    return false;
+  }
+
+  if (type == BlockType::MEMBRANE_WIRE) {
+    outMin = glm::vec3(0.30f, 0.0f, 0.30f);
+    outMax = glm::vec3(0.70f, 0.65f, 0.70f);
+    return true;
+  }
+
+  outMin = glm::vec3(0.0f);
+  outMax = glm::vec3(1.0f);
+  return true;
+}
+
 inline bool canSupportTopPlacedBlock(BlockType supportType, BlockType placedType) {
   if (placedType == BlockType::MEMBRANE_WIRE) {
     return supportType == BlockType::MEMBRANE;

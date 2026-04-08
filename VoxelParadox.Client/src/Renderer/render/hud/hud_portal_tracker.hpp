@@ -4,6 +4,7 @@
 #pragma once
 
 #include "hud_element.hpp"
+#include "world/world_save_service.hpp"
 #include "world/biome.hpp"
 
 #include <cstdint>
@@ -26,6 +27,9 @@ public:
     bool isMenuOpen() const { return menuOpen; }
     void toggleMenu();
     void closeMenu();
+    WorldSaveService::PlayerData::PortalTrackerState capturePersistentState() const;
+    void applyPersistentState(
+        const WorldSaveService::PlayerData::PortalTrackerState& state);
 
 private:
     struct MenuEntry {

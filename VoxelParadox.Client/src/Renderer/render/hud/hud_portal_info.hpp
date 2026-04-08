@@ -8,6 +8,7 @@
 #pragma region Includes
 #include "hud_element.hpp"
 #include "world/biome.hpp"
+#include "core/support/text_input.hpp"
 #include <cstdint>
 #include <string>
 #pragma endregion
@@ -58,14 +59,7 @@ private:
     glm::ivec3 editingBlock{0};
     std::uint32_t editingSeed = 0;
     BiomeSelection editingBiome{};
-    std::string editingName;
-    std::size_t caretIndex = 0;
-    std::size_t selectionStart = 0;
-    std::size_t selectionEnd = 0;
-    double backspaceRepeatAt = 0.0;
-    double deleteRepeatAt = 0.0;
-    double leftRepeatAt = 0.0;
-    double rightRepeatAt = 0.0;
+    TextInputState editingInput{};
     float caretPixelOffset = 0.0f;
     float selectionPixelStart = 0.0f;
     float selectionPixelEnd = 0.0f;

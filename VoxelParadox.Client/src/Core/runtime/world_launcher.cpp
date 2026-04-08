@@ -24,6 +24,8 @@
 namespace WorldLauncher {
 namespace {
 
+constexpr double kMinimumLoadingScreenSeconds = 0.20;
+
 struct LauncherTaskResult {
   bool success = false;
   std::string error;
@@ -81,6 +83,9 @@ RunResult run(GLFWwindow* window, const BiomeSelection& rootBiomeSelection,
 
   bool loading = false;
   std::future<LauncherTaskResult> taskFuture;
+  LauncherTaskResult completedTask{};
+  bool hasCompletedTask = false;
+  double loadingStartedAt = 0.0;
   std::string statusMessage;
 
   Input::setFocusMode(Input::FocusMode::UI);
@@ -95,38 +100,33 @@ RunResult run(GLFWwindow* window, const BiomeSelection& rootBiomeSelection,
     ENGINE::UPDATE(currentTime, rawDt);
     Input::update();
 
-    if (loading && taskFuture.valid()) {
+    if (loading && taskFuture.valid() && !hasCompletedTask) {
       const std::future_status status =
           taskFuture.wait_for(std::chrono::milliseconds(0));
       if (status == std::future_status::ready) {
-        LauncherTaskResult result = taskFuture.get();
-        loading = false;
-        launcherHud->setLoading(false);
-        if (result.success) {
-          outSession = std::move(result.session);
-          if (outError) {
-            outError->clear();
-          }
-          restoreGameplayInput();
-          HUD::clear();
-          return RunResult::StartWorld;
-        }
-
-        statusMessage = result.error;
-        launcherHud->setStatusMessage(statusMessage);
-        launcherHud->setWorlds(WorldSaveService::listWorlds());
+        completedTask = taskFuture.get();
+        hasCompletedTask = true;
       }
     }
 
-    int framebufferWidth = 0;
-    int framebufferHeight = 0;
-    glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
-    if (framebufferWidth > 0 && framebufferHeight > 0) {
-      glViewport(0, 0, framebufferWidth, framebufferHeight);
-      glClearColor(0.04f, 0.04f, 0.05f, 1.0f);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      HUD::update(framebufferWidth, framebufferHeight);
-      HUD::render(framebufferWidth, framebufferHeight);
+    if (loading && hasCompletedTask &&
+        (currentTime - loadingStartedAt) >= kMinimumLoadingScreenSeconds) {
+      loading = false;
+      launcherHud->setLoading(false);
+      if (completedTask.success) {
+        outSession = std::move(completedTask.session);
+        if (outError) {
+          outError->clear();
+        }
+        restoreGameplayInput();
+        HUD::clear();
+        return RunResult::StartWorld;
+      }
+
+      statusMessage = completedTask.error;
+      launcherHud->setStatusMessage(statusMessage);
+      launcherHud->setWorlds(WorldSaveService::listWorlds());
+      hasCompletedTask = false;
     }
 
     if (!loading) {
@@ -134,6 +134,8 @@ RunResult run(GLFWwindow* window, const BiomeSelection& rootBiomeSelection,
       switch (request.type) {
       case hudWorldLauncher::ActionType::CreateWorld:
         loading = true;
+        loadingStartedAt = currentTime;
+        hasCompletedTask = false;
         statusMessage.clear();
         launcherHud->setStatusMessage(statusMessage);
         launcherHud->setLoading(true);
@@ -143,6 +145,8 @@ RunResult run(GLFWwindow* window, const BiomeSelection& rootBiomeSelection,
         break;
       case hudWorldLauncher::ActionType::LoadWorld:
         loading = true;
+        loadingStartedAt = currentTime;
+        hasCompletedTask = false;
         statusMessage.clear();
         launcherHud->setStatusMessage(statusMessage);
         launcherHud->setLoading(true);
@@ -161,6 +165,17 @@ RunResult run(GLFWwindow* window, const BiomeSelection& rootBiomeSelection,
       default:
         break;
       }
+    }
+
+    int framebufferWidth = 0;
+    int framebufferHeight = 0;
+    glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
+    if (framebufferWidth > 0 && framebufferHeight > 0) {
+      glViewport(0, 0, framebufferWidth, framebufferHeight);
+      glClearColor(0.04f, 0.04f, 0.05f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      HUD::update(framebufferWidth, framebufferHeight);
+      HUD::render(framebufferWidth, framebufferHeight);
     }
 
     glfwSwapBuffers(window);
