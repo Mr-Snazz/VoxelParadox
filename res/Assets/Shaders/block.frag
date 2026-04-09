@@ -4,7 +4,9 @@
 // lighting, fog, transparency, and the block breaking effect.
 
 in vec3 vWorldPos;
+in vec3 vLocalPos;
 in vec3 vNormal;
+in vec3 vFaceNormal;
 in vec4 vTint;
 in float vAO;
 flat in int vMaterialId;
@@ -16,6 +18,7 @@ uniform float uTime;
 uniform float uAlpha;
 uniform float uAoStrength;
 uniform vec4 uBiomeTint;
+uniform int uUseLocalMaterialSpace;
 uniform vec3 uBreakBlockCenter;
 uniform float uBreakProgress;
 uniform vec3 uHighlightBlockCenter;
@@ -285,12 +288,13 @@ MaterialSample makeSample(vec3 albedo, float roughness, float specular, float em
     return result;
 }
 
-MaterialSample sampleBlockMaterial(int materialId, vec3 worldPos, vec3 normal, vec3 viewDir) {
+MaterialSample sampleBlockMaterial(int materialId, vec3 worldPos, vec3 worldNormal,
+                                   vec3 faceNormal, vec3 viewDir) {
     vec3 base = blockBaseColor(materialId);
-    vec2 uv = faceUv(worldPos, normal);
+    vec2 uv = faceUv(worldPos, faceNormal);
     vec2 localUv = fract(uv + vec2(0.001));
     vec2 centeredUv = localUv - 0.5;
-    vec3 cell = floor(worldPos - normal * 0.5 + vec3(0.001));
+    vec3 cell = floor(worldPos - faceNormal * 0.5 + vec3(0.001));
     float cellHash = hash31(cell + vec3(float(materialId) * 1.6180339, 2.13, 4.37));
 
     if (materialId == MATERIAL_STONE) {
@@ -307,7 +311,7 @@ MaterialSample sampleBlockMaterial(int materialId, vec3 worldPos, vec3 normal, v
     if (materialId == MATERIAL_CRYSTAL) {
         float bands = 0.5 + 0.5 * sin((uv.x + uv.y) * 18.0 + uTime * 2.4);
         float sparkle = noise21(localUv * 14.0 + cellHash * 9.0);
-        float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 4.0);
+        float fresnel = pow(1.0 - max(dot(worldNormal, viewDir), 0.0), 4.0);
         vec3 albedo = mix(base * 0.78, vec3(1.0), bands * 0.32 + fresnel * 0.22);
         albedo *= 0.96 + sparkle * 0.08;
         albedo += vec3(0.08, 0.14, 0.18) * fresnel;
@@ -319,7 +323,7 @@ MaterialSample sampleBlockMaterial(int materialId, vec3 worldPos, vec3 normal, v
     if (materialId == MATERIAL_VOID_MATTER) {
         float voidNoise = fbm21(uv * 6.0 + vec2(uTime * 0.20, -uTime * 0.20) + cellHash * 5.0);
         float wisps = 0.5 + 0.5 * sin((uv.x - uv.y) * 14.0 - uTime * 3.0 + cellHash * 8.0);
-        float rim = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.4);
+        float rim = pow(1.0 - max(dot(worldNormal, viewDir), 0.0), 2.4);
         vec3 albedo = mix(base * 0.22, base * 0.85 + vec3(0.08, 0.0, 0.12), voidNoise);
         albedo += vec3(0.06, 0.01, 0.08) * wisps * 0.25;
         return makeSample(clamp(albedo, vec3(0.0), vec3(1.2)), 0.52, 0.18,
@@ -354,7 +358,7 @@ MaterialSample sampleBlockMaterial(int materialId, vec3 worldPos, vec3 normal, v
         float brushed = 0.5 + 0.5 * sin(uv.y * 96.0);
         float scratches = fbm21(vec2(uv.x * 18.0, uv.y * 72.0));
         float microScratch = noise21(localUv * 18.0 + cellHash * 7.0);
-        float edge = pow(1.0 - max(dot(normal, viewDir), 0.0), 3.5);
+        float edge = pow(1.0 - max(dot(worldNormal, viewDir), 0.0), 3.5);
         vec3 albedo = mix(base * 0.72, base * 1.12,
                           brushed * 0.22 + scratches * 0.14 + microScratch * 0.04);
         albedo += vec3(edge) * 0.08;
@@ -402,28 +406,32 @@ float bayerDither4x4(vec2 pix, float brightness) {
 }
 
 void main() {
-    vec3 normal = normalize(vNormal);
+    vec3 worldNormal = normalize(vNormal);
+    vec3 faceNormal = normalize(vFaceNormal);
+    vec3 materialPos = (uUseLocalMaterialSpace != 0) ? vLocalPos : vWorldPos;
     vec3 viewDir = normalize(uCameraPos - vWorldPos);
-    MaterialSample material = sampleBlockMaterial(vMaterialId, vWorldPos, normal, viewDir);
+    MaterialSample material =
+        sampleBlockMaterial(vMaterialId, materialPos, worldNormal, faceNormal, viewDir);
 
     vec3 tint = clamp(vTint.rgb * uBiomeTint.rgb, vec3(0.45), vec3(1.85));
     material.albedo *= tint;
 
     vec3 lightDir = normalize(vec3(0.4, 1.0, 0.3));
-    float diffuse = max(dot(normal, lightDir), 0.0);
+    float diffuse = max(dot(worldNormal, lightDir), 0.0);
     float ambient = 0.38;
     float ao = mix(0.35, 1.0, vAO);
     float light = (ambient + diffuse * 0.55) * mix(1.0, ao, uAoStrength);
 
     vec3 halfDir = normalize(lightDir + viewDir);
     float specPower = mix(14.0, 96.0, 1.0 - material.roughness);
-    float specular = pow(max(dot(normal, halfDir), 0.0), specPower) * material.specular;
+    float specular =
+        pow(max(dot(worldNormal, halfDir), 0.0), specPower) * material.specular;
 
     vec3 color = material.albedo * light +
                  mix(vec3(specular), material.albedo * specular, 0.25);
 
     float pulse = 0.5 + 0.5 * sin(uTime * 3.0 + vWorldPos.x + vWorldPos.z);
-    vec2 ditherCoord = faceUv(vWorldPos, normal) * 16.0;
+    vec2 ditherCoord = faceUv(materialPos, faceNormal) * 16.0;
     float ditherMask = bayerDither4x4(floor(ditherCoord), pulse);
     float ditheredPulse = mix(pulse * 0.45, pulse, ditherMask);
     float emissive =
@@ -443,9 +451,9 @@ void main() {
             vec3 pixelLocal =
                 (floor(local * BREAK_PIXEL_GRID) + vec3(0.5)) / BREAK_PIXEL_GRID;
 
-            vec2 breakUv = faceUv(pixelLocal, normal);
+            vec2 breakUv = faceUv(pixelLocal, faceNormal);
             vec3 blockSeed = floor(uBreakBlockCenter);
-            float faceId = breakFaceId(normal);
+            float faceId = breakFaceId(faceNormal);
             vec2 faceSeed = vec2(
                 hash31(blockSeed + vec3(11.3, 7.1, 3.7 + faceId)),
                 hash31(blockSeed + vec3(23.8, 19.4, 17.2 + faceId * 1.6180339))
@@ -515,7 +523,7 @@ void main() {
     float dist = length(vWorldPos - uCameraPos);
     float fog = 1.0 - exp(-dist * uFogDensity);
     color = mix(color, uFogColor.rgb, fog);
-    color = applySelectionHighlight(color, vWorldPos, normal);
+    color = applySelectionHighlight(color, vWorldPos, faceNormal);
 
     FragColor = vec4(color, uAlpha);
 }

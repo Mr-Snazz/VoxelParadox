@@ -117,6 +117,8 @@ private:
   void drawSaveAsPopup();
 
   bool drawBlockTypeCombo(const char* label, BlockType& blockType);
+  bool drawBlockTypeMultiSelect(const char* label,
+                                std::vector<BlockType>& blockTypes);
 };
 
 } // namespace BiomeMaker

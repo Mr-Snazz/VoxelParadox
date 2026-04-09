@@ -57,6 +57,7 @@ enum class ModuleType : std::uint8_t {
   FRACTAL_NOISE = 6,
   RIDGED_NOISE = 7,
   DOMAIN_WARPED_NOISE = 8,
+  TREE_GENERATOR = 9,
 };
 
 const char* moduleTypeId(ModuleType type);
@@ -72,6 +73,17 @@ const char* voxPlacementPatternId(VoxPlacementPattern pattern);
 const char* voxPlacementPatternDisplayName(VoxPlacementPattern pattern);
 bool tryParseVoxPlacementPattern(const std::string& value,
                                  VoxPlacementPattern& outPattern);
+
+enum class TreeGeneratorType : std::uint8_t {
+  NORMAL = 0,
+  STRANGE = 1,
+  TRUNK_ONLY = 2,
+};
+
+const char* treeGeneratorTypeId(TreeGeneratorType type);
+const char* treeGeneratorTypeDisplayName(TreeGeneratorType type);
+bool tryParseTreeGeneratorType(const std::string& value,
+                               TreeGeneratorType& outType);
 
 enum class VoxRotationMode : std::uint8_t {
   FIXED = 0,
@@ -242,6 +254,18 @@ struct DomainWarpedNoiseModule {
   float warpStrength = 10.0f;
 };
 
+struct TreeGeneratorModule {
+  std::vector<BlockType> spawnOnBlocks{BlockType::MEMBRANE, BlockType::ORGANIC};
+  VoxPlacementPattern pattern = VoxPlacementPattern::RANDOM_SCATTER;
+  float density = 0.35f;
+  TreeGeneratorType treeType = TreeGeneratorType::NORMAL;
+  BlockType trunkBlock = BlockType::MEMBRANE_WEAVE;
+  BlockType leavesBlock = BlockType::ORGANIC;
+  bool infiniteY = false;
+  int minY = -8;
+  int maxY = 72;
+};
+
 // -----------------------------------------------------------------------------
 // Public asset types used by runtime and editor.
 // -----------------------------------------------------------------------------
@@ -264,6 +288,7 @@ struct BiomeModule {
   FractalNoiseModule fractalNoise{};
   RidgedNoiseModule ridgedNoise{};
   DomainWarpedNoiseModule domainWarpedNoise{};
+  TreeGeneratorModule treeGenerator{};
 
   static BiomeModule makePerlinTerrain(const std::string& id = "perlin",
                                        int depth = 0);
@@ -277,6 +302,8 @@ struct BiomeModule {
   static BiomeModule makeRidgedNoise(const std::string& id = "ridged_noise");
   static BiomeModule makeDomainWarpedNoise(
       const std::string& id = "domain_warped_noise");
+  static BiomeModule makeTreeGenerator(
+      const std::string& id = "tree_generator");
 };
 
 struct BiomePreset {

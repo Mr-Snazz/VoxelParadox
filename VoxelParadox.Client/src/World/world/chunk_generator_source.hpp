@@ -159,6 +159,9 @@ private:
   // Funcao: executa 'fillAir' na geracao procedural baseada em presets.
   // Detalhe: usa 'chunk' para encapsular esta etapa especifica do subsistema.
   void fillAir(Chunk& chunk) const;
+  void generateBaseChunk(Chunk& chunk) const;
+  void applyModuleLayer(Chunk& chunk, const BiomeModule& module,
+                        std::size_t moduleIndex) const;
   // Funcao: aplica 'applyPerlinTerrainLayer' na geracao procedural baseada em presets.
   // Detalhe: usa 'chunk', 'module' para propagar o efeito calculado sobre o estado do jogo ou do subsistema.
   void applyPerlinTerrainLayer(Chunk& chunk, const BiomeModule& module) const;
@@ -175,6 +178,7 @@ private:
   void applyFractalNoiseLayer(Chunk& chunk, const BiomeModule& module) const;
   void applyRidgedNoiseLayer(Chunk& chunk, const BiomeModule& module) const;
   void applyDomainWarpedNoiseLayer(Chunk& chunk, const BiomeModule& module) const;
+  void applyTreeGeneratorLayer(Chunk& chunk, const BiomeModule& module) const;
   // Funcao: aplica 'applyImportVoxLayer' na geracao procedural baseada em presets.
   // Detalhe: usa 'chunk', 'runtime' para propagar o efeito calculado sobre o estado do jogo ou do subsistema.
   void applyImportVoxLayer(Chunk& chunk, const ImportVoxRuntime& runtime) const;

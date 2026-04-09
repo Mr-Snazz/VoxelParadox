@@ -60,6 +60,11 @@ glm::vec3 buildDroppedModelCenter(const glm::vec3& itemPosition, float time, flo
     return itemPosition + glm::vec3(0.0f, std::sin(time * 2.4f + spinPhase) * 0.06f, 0.0f);
 }
 
+float smooth01(float value) {
+    const float clamped = glm::clamp(value, 0.0f, 1.0f);
+    return clamped * clamped * (3.0f - 2.0f * clamped);
+}
+
 }  // namespace
 
 void Renderer::renderHUD3DOverlays(const Player& player, const FractalWorld* world, int depth,
@@ -194,6 +199,7 @@ void Renderer::renderItemPreviewInRect(const glm::ivec4& slotRectTopLeft, int sc
             blockShader.setFloat("uAlpha", 1.0f);
             blockShader.setFloat("uAoStrength", 1.0f);
             blockShader.setVec4("uBiomeTint", getBiomeMaterialTint(world, depth));
+            blockShader.setInt("uUseLocalMaterialSpace", 1);
             setBreakEffectUniforms(glm::vec3(0.0f), 0.0f);
             setHighlightEffectUniforms(glm::vec3(0.0f), 0.0f);
 
@@ -407,29 +413,36 @@ void Renderer::renderItemSprite(ItemType type, const glm::mat4& vp, const glm::m
 void Renderer::renderHeldItem(const Player& player, const FractalWorld* world,
                               const glm::mat4& vp, int depth, float time,
                               float visibility) {
-    const InventoryItem& heldItem = player.getSelectedHotbarItem();
+    const InventoryItem& heldItem =
+        heldItemTransition.swapAnimating ? heldItemTransition.currentItem
+                                         : player.getSelectedHotbarItem();
     if (heldItem.empty() || visibility <= 0.001f) {
         return;
     }
 
+    const float verticalOffset =
+        heldItemTransition.swapAnimating ? heldItemTransition.swapVerticalOffset : 0.0f;
+
     if (usesItemTexturePreview(heldItem)) {
-        renderHeldSpriteItem(player, heldItem.itemType, vp, time, visibility);
+        renderHeldSpriteItem(player, heldItem.itemType, vp, time, visibility, verticalOffset);
         return;
     }
 
     if (heldItem.isBlock() && usesCustomBlockModel(heldItem.blockType)) {
         renderHeldCustomBlockModel(player, world, heldItem.blockType, vp, depth, time,
-                                   visibility);
+                                   visibility, verticalOffset);
         return;
     }
 
     if (isPlaceableInventoryItem(heldItem)) {
-        renderHeldBlock(player, world, heldItem.blockType, vp, depth, time, visibility);
+        renderHeldBlock(player, world, heldItem.blockType, vp, depth, time, visibility,
+                        verticalOffset);
     }
 }
 
 void Renderer::renderHeldSpriteItem(const Player& player, ItemType heldType,
-                                    const glm::mat4& vp, float time, float visibility) {
+                                    const glm::mat4& vp, float time, float visibility,
+                                    float verticalOffset) {
     const glm::vec3 forward = glm::normalize(player.camera.getForward());
     const glm::vec3 right = glm::normalize(player.camera.getRight());
     const glm::vec3 up = glm::normalize(player.camera.getUp());
@@ -441,7 +454,8 @@ void Renderer::renderHeldSpriteItem(const Player& player, ItemType heldType,
     const glm::vec3 position =
         player.camera.position + forward * heldItemConfig.spritePositionOffset.x +
         right * heldItemConfig.spritePositionOffset.y +
-        up * (heldItemConfig.spritePositionOffset.z - hiddenOffset + idleLift);
+        up * (heldItemConfig.spritePositionOffset.z - hiddenOffset + idleLift +
+              verticalOffset);
 
     glm::mat4 basis(1.0f);
     basis[0] = glm::vec4(right, 0.0f);
@@ -465,7 +479,8 @@ void Renderer::renderHeldSpriteItem(const Player& player, ItemType heldType,
 
 void Renderer::renderHeldCustomBlockModel(const Player& player, const FractalWorld* world,
                                           BlockType heldType, const glm::mat4& vp, int depth,
-                                          float time, float visibility) {
+                                          float time, float visibility,
+                                          float verticalOffset) {
     (void)world;
     const LoadedObjBlockModel* blockModel = getLoadedCustomBlockModel(heldType);
     if (!blockModel) {
@@ -483,7 +498,8 @@ void Renderer::renderHeldCustomBlockModel(const Player& player, const FractalWor
     const glm::vec3 position =
         player.camera.position + forward * heldItemConfig.blockPositionOffset.x +
         right * heldItemConfig.blockPositionOffset.y +
-        up * (heldItemConfig.blockPositionOffset.z - hiddenOffset + idleLift);
+        up * (heldItemConfig.blockPositionOffset.z - hiddenOffset + idleLift +
+              verticalOffset);
 
     glm::mat4 rotationScale(1.0f);
     rotationScale[0] = glm::vec4(right, 0.0f);
@@ -536,7 +552,7 @@ void Renderer::renderHeldCustomBlockModel(const Player& player, const FractalWor
 
 void Renderer::renderHeldBlock(const Player& player, const FractalWorld* world,
                                BlockType heldType, const glm::mat4& vp, int depth,
-                               float time, float visibility) {
+                               float time, float visibility, float verticalOffset) {
     const glm::vec3 forward = glm::normalize(player.camera.getForward());
     const glm::vec3 right = glm::normalize(player.camera.getRight());
     const glm::vec3 up = glm::normalize(player.camera.getUp());
@@ -548,7 +564,8 @@ void Renderer::renderHeldBlock(const Player& player, const FractalWorld* world,
     const glm::vec3 position =
         player.camera.position + forward * heldItemConfig.blockPositionOffset.x +
         right * heldItemConfig.blockPositionOffset.y +
-        up * (heldItemConfig.blockPositionOffset.z - hiddenOffset + idleLift);
+        up * (heldItemConfig.blockPositionOffset.z - hiddenOffset + idleLift +
+              verticalOffset);
 
     glm::mat4 rotation(1.0f);
     rotation[0] = glm::vec4(right, 0.0f);
@@ -582,6 +599,7 @@ void Renderer::renderHeldBlock(const Player& player, const FractalWorld* world,
     blockShader.setFloat("uAlpha", shownAmount);
     blockShader.setFloat("uAoStrength", 1.0f);
     blockShader.setVec4("uBiomeTint", getBiomeMaterialTint(world, depth));
+    blockShader.setInt("uUseLocalMaterialSpace", 1);
     setBreakEffectUniforms(glm::vec3(0.0f), 0.0f);
     setHighlightEffectUniforms(glm::vec3(0.0f), 0.0f);
 
@@ -818,6 +836,7 @@ void Renderer::renderDroppedItems(const FractalWorld& world, const glm::mat4& vp
         blockShader.setFloat("uAlpha", alpha);
         blockShader.setFloat("uAoStrength", 1.0f);
         blockShader.setVec4("uBiomeTint", getBiomeMaterialTint(&world, depth));
+        blockShader.setInt("uUseLocalMaterialSpace", 1);
         setBreakEffectUniforms(glm::vec3(0.0f), 0.0f);
         setHighlightEffectUniforms(glm::vec3(0.0f), 0.0f);
         glDisable(GL_BLEND);

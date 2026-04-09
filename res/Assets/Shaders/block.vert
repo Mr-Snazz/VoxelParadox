@@ -14,7 +14,9 @@ uniform mat4 uVP;
 uniform mat4 uModel;
 
 out vec3 vWorldPos;
+out vec3 vLocalPos;
 out vec3 vNormal;
+out vec3 vFaceNormal;
 out vec4 vTint;
 out float vAO;
 flat out int vMaterialId;
@@ -22,7 +24,9 @@ flat out int vMaterialId;
 void main() {
     vec4 worldPos = uModel * vec4(aPos, 1.0);
     vWorldPos = worldPos.xyz;
+    vLocalPos = aPos;
     vNormal = mat3(uModel) * aNormal;
+    vFaceNormal = aNormal;
     vTint = aTint;
     vAO = aAO;
     vMaterialId = int(aMaterial + 0.5);

@@ -75,6 +75,8 @@ Player::PersistentState Player::capturePersistentState() const {
     state.sandboxModeEnabled = sandboxModeEnabled;
     state.universeCreationCooldownRemainingSeconds =
         getUniverseCreationCooldownRemainingSeconds();
+    state.doubleJumpCooldownRemainingSeconds =
+        glm::max(0.0, nextDoubleJumpTimeSeconds - ENGINE::GETTIME());
     state.grounded = grounded;
     state.crouching = crouching;
     state.currentEyeHeight = currentEyeHeight;
@@ -98,6 +100,8 @@ void Player::applyPersistentState(const PersistentState& state) {
     sandboxModeEnabled = state.sandboxModeEnabled;
     nextUniverseCreationTimeSeconds =
         ENGINE::GETTIME() + glm::max(0.0, state.universeCreationCooldownRemainingSeconds);
+    nextDoubleJumpTimeSeconds =
+        ENGINE::GETTIME() + glm::max(0.0, state.doubleJumpCooldownRemainingSeconds);
     grounded = state.grounded;
     crouching = state.crouching;
     currentEyeHeight = glm::clamp(state.currentEyeHeight,

@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <limits>
 #include <optional>
+#include <unordered_map>
 
 #include "path/app_paths.hpp"
 #include "world/noise.hpp"
@@ -72,6 +73,69 @@ bool chunkIntersectsVerticalRange(const Chunk& chunk, bool infiniteY, int minY,
 
 float thresholdMargin(float signal, float threshold, bool invert) {
   return invert ? (threshold - signal) : (signal - threshold);
+}
+
+bool containsBlockType(const std::vector<BlockType>& blockTypes,
+                       BlockType candidate) {
+  return std::find(blockTypes.begin(), blockTypes.end(), candidate) !=
+         blockTypes.end();
+}
+
+struct ChunkCacheKey {
+  int x = 0;
+  int y = 0;
+  int z = 0;
+
+  bool operator==(const ChunkCacheKey& other) const {
+    return x == other.x && y == other.y && z == other.z;
+  }
+};
+
+struct ChunkCacheKeyHasher {
+  std::size_t operator()(const ChunkCacheKey& key) const {
+    std::size_t hash = static_cast<std::size_t>(static_cast<std::uint32_t>(key.x));
+    hash = (hash * 16777619ull) ^
+           static_cast<std::size_t>(static_cast<std::uint32_t>(key.y));
+    hash = (hash * 16777619ull) ^
+           static_cast<std::size_t>(static_cast<std::uint32_t>(key.z));
+    return hash;
+  }
+};
+
+int treeCellSize(float density, VoxPlacementPattern pattern) {
+  const float clampedDensity = std::clamp(density, 0.0f, 1.0f);
+  const float minCell = pattern == VoxPlacementPattern::GRID ? 6.0f : 7.0f;
+  const float maxCell = pattern == VoxPlacementPattern::GRID ? 20.0f : 18.0f;
+  return std::max(4, static_cast<int>(
+                         std::round(glm::mix(maxCell, minCell, clampedDensity))));
+}
+
+int treeJitter(int cellSize) { return std::max(0, (cellSize / 2) - 1); }
+
+int treeHorizontalReach(TreeGeneratorType type) {
+  switch (type) {
+  case TreeGeneratorType::NORMAL:
+    return 3;
+  case TreeGeneratorType::STRANGE:
+    return 2;
+  case TreeGeneratorType::TRUNK_ONLY:
+    return 0;
+  default:
+    return 3;
+  }
+}
+
+int treeVerticalReach(TreeGeneratorType type) {
+  switch (type) {
+  case TreeGeneratorType::NORMAL:
+    return 10;
+  case TreeGeneratorType::STRANGE:
+    return 12;
+  case TreeGeneratorType::TRUNK_ONLY:
+    return 8;
+  default:
+    return 10;
+  }
 }
 
 } // namespace
@@ -320,6 +384,62 @@ void PresetModuleGeneratorSource::fillAir(Chunk& chunk) const {
   }
 }
 
+void PresetModuleGeneratorSource::generateBaseChunk(Chunk& chunk) const {
+  fillAir(chunk);
+
+  for (std::size_t reverseIndex = preset_->modules.size(); reverseIndex > 0;
+       reverseIndex--) {
+    const std::size_t index = reverseIndex - 1;
+    const BiomeModule& module = preset_->modules[index];
+    if (!module.enabled || module.type == ModuleType::TREE_GENERATOR) {
+      continue;
+    }
+
+    applyModuleLayer(chunk, module, index);
+  }
+
+  carveSpawnBubble(chunk);
+  chunk.generated = true;
+}
+
+void PresetModuleGeneratorSource::applyModuleLayer(
+    Chunk& chunk, const BiomeModule& module, std::size_t moduleIndex) const {
+  switch (module.type) {
+  case ModuleType::PERLIN_TERRAIN:
+    applyPerlinTerrainLayer(chunk, module);
+    break;
+  case ModuleType::IMPORT_VOX_FILES:
+    if (const ImportVoxRuntime* runtime = findImportRuntime(moduleIndex)) {
+      applyImportVoxLayer(chunk, *runtime);
+    }
+    break;
+  case ModuleType::GRID_PATTERN:
+    applyGridPatternLayer(chunk, module);
+    break;
+  case ModuleType::MENGER_SPONGE:
+    applyMengerSpongeLayer(chunk, module);
+    break;
+  case ModuleType::CAVE_SYSTEM:
+    applyCaveSystemLayer(chunk, module);
+    break;
+  case ModuleType::CELLULAR_NOISE:
+    applyCellularNoiseLayer(chunk, module);
+    break;
+  case ModuleType::FRACTAL_NOISE:
+    applyFractalNoiseLayer(chunk, module);
+    break;
+  case ModuleType::RIDGED_NOISE:
+    applyRidgedNoiseLayer(chunk, module);
+    break;
+  case ModuleType::DOMAIN_WARPED_NOISE:
+    applyDomainWarpedNoiseLayer(chunk, module);
+    break;
+  case ModuleType::TREE_GENERATOR:
+    applyTreeGeneratorLayer(chunk, module);
+    break;
+  }
+}
+
 // Funcao: executa 'generateChunk' na geracao procedural baseada em presets.
 // Detalhe: usa 'chunk' para encapsular esta etapa especifica do subsistema.
 void PresetModuleGeneratorSource::generateChunk(Chunk& chunk) const {
@@ -334,37 +454,7 @@ void PresetModuleGeneratorSource::generateChunk(Chunk& chunk) const {
       continue;
     }
 
-    switch (module.type) {
-    case ModuleType::PERLIN_TERRAIN:
-      applyPerlinTerrainLayer(chunk, module);
-      break;
-    case ModuleType::IMPORT_VOX_FILES:
-      if (const ImportVoxRuntime* runtime = findImportRuntime(index)) {
-        applyImportVoxLayer(chunk, *runtime);
-      }
-      break;
-    case ModuleType::GRID_PATTERN:
-      applyGridPatternLayer(chunk, module);
-      break;
-    case ModuleType::MENGER_SPONGE:
-      applyMengerSpongeLayer(chunk, module);
-      break;
-    case ModuleType::CAVE_SYSTEM:
-      applyCaveSystemLayer(chunk, module);
-      break;
-    case ModuleType::CELLULAR_NOISE:
-      applyCellularNoiseLayer(chunk, module);
-      break;
-    case ModuleType::FRACTAL_NOISE:
-      applyFractalNoiseLayer(chunk, module);
-      break;
-    case ModuleType::RIDGED_NOISE:
-      applyRidgedNoiseLayer(chunk, module);
-      break;
-    case ModuleType::DOMAIN_WARPED_NOISE:
-      applyDomainWarpedNoiseLayer(chunk, module);
-      break;
-    }
+    applyModuleLayer(chunk, module, index);
   }
 
   carveSpawnBubble(chunk);
@@ -1318,6 +1408,194 @@ void PresetModuleGeneratorSource::applyDomainWarpedNoiseLayer(
             noiseSettings, signalMargin, secondaryNoise, accentNoise);
         writeLayerBlock(chunk.blocks[x][y][z], value, module.blendMode);
       }
+    }
+  }
+}
+
+void PresetModuleGeneratorSource::applyTreeGeneratorLayer(
+    Chunk& chunk, const BiomeModule& module) const {
+  const TreeGeneratorModule& tree = module.treeGenerator;
+  if (tree.spawnOnBlocks.empty() || tree.density <= 0.0f) {
+    return;
+  }
+
+  const glm::ivec3 chunkMin(chunk.chunkPos.x * Chunk::SIZE,
+                            chunk.chunkPos.y * Chunk::SIZE,
+                            chunk.chunkPos.z * Chunk::SIZE);
+  const glm::ivec3 chunkMax = chunkMin + glm::ivec3(Chunk::SIZE - 1);
+  const int horizontalReach = treeHorizontalReach(tree.treeType);
+  const int verticalReach = treeVerticalReach(tree.treeType);
+  const int cellSize = treeCellSize(tree.density, tree.pattern);
+  const int jitter =
+      tree.pattern == VoxPlacementPattern::RANDOM_SCATTER ? treeJitter(cellSize) : 0;
+  const int baseMinY =
+      tree.infiniteY ? (chunkMin.y - verticalReach)
+                     : std::max(tree.minY, chunkMin.y - verticalReach);
+  const int baseMaxY =
+      tree.infiniteY ? chunkMax.y : std::min(tree.maxY, chunkMax.y);
+  if (baseMaxY < baseMinY) {
+    return;
+  }
+
+  const int cellMinX = floorDiv(chunkMin.x - horizontalReach - jitter, cellSize);
+  const int cellMaxX = floorDiv(chunkMax.x + horizontalReach + jitter, cellSize);
+  const int cellMinZ = floorDiv(chunkMin.z - horizontalReach - jitter, cellSize);
+  const int cellMaxZ = floorDiv(chunkMax.z + horizontalReach + jitter, cellSize);
+
+  std::unordered_map<ChunkCacheKey, Chunk, ChunkCacheKeyHasher> baseChunkCache;
+  const auto sampleBaseBlockAt = [&](const glm::ivec3& worldPos) -> BlockType {
+    const ChunkCacheKey key{floorDiv(worldPos.x, Chunk::SIZE),
+                            floorDiv(worldPos.y, Chunk::SIZE),
+                            floorDiv(worldPos.z, Chunk::SIZE)};
+    auto iterator = baseChunkCache.find(key);
+    if (iterator == baseChunkCache.end()) {
+      iterator = baseChunkCache
+                     .try_emplace(key, glm::ivec3(key.x, key.y, key.z))
+                     .first;
+      generateBaseChunk(iterator->second);
+    }
+
+    const int localX = positiveModInt(worldPos.x, Chunk::SIZE);
+    const int localY = positiveModInt(worldPos.y, Chunk::SIZE);
+    const int localZ = positiveModInt(worldPos.z, Chunk::SIZE);
+    return iterator->second.blocks[localX][localY][localZ];
+  };
+
+  const auto stampWorldBlock = [&](const glm::ivec3& worldPos, BlockType value) {
+    if (worldPos.x < chunkMin.x || worldPos.x > chunkMax.x || worldPos.y < chunkMin.y ||
+        worldPos.y > chunkMax.y || worldPos.z < chunkMin.z || worldPos.z > chunkMax.z) {
+      return;
+    }
+
+    const glm::ivec3 localPos = worldPos - chunkMin;
+    writeLayerBlock(chunk.blocks[localPos.x][localPos.y][localPos.z], value,
+                    module.blendMode);
+  };
+
+  const std::uint32_t moduleSeed = seed() ^ hashString(module.id) ^ 0x73a41f2du;
+  for (int cellX = cellMinX; cellX <= cellMaxX; ++cellX) {
+    for (int cellZ = cellMinZ; cellZ <= cellMaxZ; ++cellZ) {
+      std::uint32_t state = hash3i(cellX, runtimeDepth_, cellZ, moduleSeed);
+      glm::ivec3 trunkBase(cellX * cellSize + (cellSize / 2), 0,
+                           cellZ * cellSize + (cellSize / 2));
+      if (tree.pattern == VoxPlacementPattern::RANDOM_SCATTER) {
+        trunkBase.x += randRange(state, -jitter, jitter);
+        trunkBase.z += randRange(state, -jitter, jitter);
+      }
+
+      const int clearanceHeight = verticalReach + 1;
+      int foundBaseY = std::numeric_limits<int>::min();
+      for (int y = baseMaxY; y >= baseMinY; --y) {
+        const BlockType supportBlock =
+            sampleBaseBlockAt(glm::ivec3(trunkBase.x, y - 1, trunkBase.z));
+        if (!containsBlockType(tree.spawnOnBlocks, supportBlock)) {
+          continue;
+        }
+
+        bool hasClearance = true;
+        for (int dy = 0; dy < clearanceHeight; ++dy) {
+          const BlockType occupiedBlock =
+              sampleBaseBlockAt(glm::ivec3(trunkBase.x, y + dy, trunkBase.z));
+          if (!isReplaceableBlock(occupiedBlock)) {
+            hasClearance = false;
+            break;
+          }
+        }
+
+        if (!hasClearance) {
+          continue;
+        }
+
+        foundBaseY = y;
+        break;
+      }
+
+      if (foundBaseY == std::numeric_limits<int>::min()) {
+        continue;
+      }
+
+      trunkBase.y = foundBaseY;
+      std::uint32_t treeState =
+          hash3i(trunkBase.x, trunkBase.y, trunkBase.z, moduleSeed ^ 0x9E3779B9u);
+
+      if (tree.treeType == TreeGeneratorType::TRUNK_ONLY) {
+        const int trunkHeight = randRange(treeState, 4, 8);
+        for (int dy = 0; dy < trunkHeight; ++dy) {
+          stampWorldBlock(glm::ivec3(trunkBase.x, trunkBase.y + dy, trunkBase.z),
+                          tree.trunkBlock);
+        }
+        continue;
+      }
+
+      if (tree.treeType == TreeGeneratorType::STRANGE) {
+        const int trunkHeight = randRange(treeState, 5, 9);
+        int trunkX = trunkBase.x;
+        int trunkZ = trunkBase.z;
+        for (int dy = 0; dy < trunkHeight; ++dy) {
+          if (dy > 1 && dy < trunkHeight - 1 && (dy % 2) == 0) {
+            trunkX += randRange(treeState, -1, 1);
+            trunkZ += randRange(treeState, -1, 1);
+          }
+
+          const glm::ivec3 trunkPos(trunkX, trunkBase.y + dy, trunkZ);
+          stampWorldBlock(trunkPos, tree.trunkBlock);
+
+          if (dy >= trunkHeight / 2 && dy < trunkHeight - 1 && (dy % 2) == 1) {
+            const int branchLength = randRange(treeState, 1, 2);
+            const int direction = randRange(treeState, 0, 3);
+            glm::ivec3 branchDir(0);
+            switch (direction) {
+            case 0:
+              branchDir.x = 1;
+              break;
+            case 1:
+              branchDir.x = -1;
+              break;
+            case 2:
+              branchDir.z = 1;
+              break;
+            default:
+              branchDir.z = -1;
+              break;
+            }
+
+            for (int step = 1; step <= branchLength; ++step) {
+              stampWorldBlock(trunkPos + branchDir * step, tree.trunkBlock);
+            }
+          }
+        }
+        continue;
+      }
+
+      const int trunkHeight = randRange(treeState, 4, 7);
+      for (int dy = 0; dy < trunkHeight; ++dy) {
+        stampWorldBlock(glm::ivec3(trunkBase.x, trunkBase.y + dy, trunkBase.z),
+                        tree.trunkBlock);
+      }
+
+      const int canopyBaseY = trunkBase.y + trunkHeight - 2;
+      for (int dx = -2; dx <= 2; ++dx) {
+        for (int dy = -1; dy <= 2; ++dy) {
+          for (int dz = -2; dz <= 2; ++dz) {
+            const int horizontalDistance = std::abs(dx) + std::abs(dz);
+            if ((dy == -1 && horizontalDistance > 2) ||
+                (dy == 2 && horizontalDistance > 1) ||
+                (std::abs(dx) == 2 && std::abs(dz) == 2)) {
+              continue;
+            }
+            if (dx == 0 && dz == 0 && dy <= 0) {
+              continue;
+            }
+
+            stampWorldBlock(
+                glm::ivec3(trunkBase.x + dx, canopyBaseY + dy, trunkBase.z + dz),
+                tree.leavesBlock);
+          }
+        }
+      }
+
+      stampWorldBlock(glm::ivec3(trunkBase.x, canopyBaseY + 3, trunkBase.z),
+                      tree.leavesBlock);
     }
   }
 }

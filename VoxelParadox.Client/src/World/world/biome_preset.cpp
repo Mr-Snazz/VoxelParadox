@@ -156,6 +156,48 @@ bool fromJson(const json& value, BlockType& outBlockType) {
   return tryParseBlockType(value.get<std::string>(), outBlockType);
 }
 
+json toJson(const std::vector<BlockType>& blockTypes) {
+  json result = json::array();
+  for (BlockType blockType : blockTypes) {
+    if (blockType == BlockType::AIR || blockType == BlockType::COUNT) {
+      continue;
+    }
+    result.push_back(toJson(blockType));
+  }
+  return result;
+}
+
+bool fromJson(const json& value, std::vector<BlockType>& outBlockTypes,
+              std::string& outError, const char* contextName) {
+  if (!value.is_array()) {
+    outError = std::string(contextName) + " must be an array of block ids.";
+    return false;
+  }
+
+  std::vector<BlockType> blockTypes;
+  blockTypes.reserve(value.size());
+  for (const json& blockValue : value) {
+    BlockType blockType = BlockType::AIR;
+    if (!fromJson(blockValue, blockType) || blockType == BlockType::AIR ||
+        blockType == BlockType::COUNT) {
+      outError = std::string(contextName) + " uses an unknown block id.";
+      return false;
+    }
+    if (std::find(blockTypes.begin(), blockTypes.end(), blockType) ==
+        blockTypes.end()) {
+      blockTypes.push_back(blockType);
+    }
+  }
+
+  if (blockTypes.empty()) {
+    outError = std::string(contextName) + " must contain at least one block.";
+    return false;
+  }
+
+  outBlockTypes = std::move(blockTypes);
+  return true;
+}
+
 // Funcao: executa 'toJson' na serializacao e utilitarios de preset de biome.
 // Detalhe: usa 'palette' para encapsular esta etapa especifica do subsistema.
 // Retorno: devolve 'json' com o resultado composto por esta chamada.
@@ -694,6 +736,81 @@ bool fromJson(const json& value, DomainWarpedNoiseModule& outModule,
   return true;
 }
 
+json toJson(const TreeGeneratorModule& module) {
+  return json{
+      {"spawn_on_blocks", toJson(module.spawnOnBlocks)},
+      {"pattern", voxPlacementPatternId(module.pattern)},
+      {"density", module.density},
+      {"tree_type", treeGeneratorTypeId(module.treeType)},
+      {"trunk_block", toJson(module.trunkBlock)},
+      {"leaves_block", toJson(module.leavesBlock)},
+      {"infinite_y", module.infiniteY},
+      {"min_y", module.minY},
+      {"max_y", module.maxY},
+  };
+}
+
+bool fromJson(const json& value, TreeGeneratorModule& outModule,
+              std::string& outError) {
+  if (!value.is_object()) {
+    outError = "tree_generator.settings must be an object.";
+    return false;
+  }
+
+  if (!fromJson(value.value("spawn_on_blocks", json::array()),
+                outModule.spawnOnBlocks, outError,
+                "tree_generator.settings.spawn_on_blocks")) {
+    return false;
+  }
+
+  VoxPlacementPattern pattern = outModule.pattern;
+  if (!tryParseVoxPlacementPattern(
+          value.value("pattern", std::string(voxPlacementPatternId(outModule.pattern))),
+          pattern)) {
+    outError = "Unsupported tree_generator.settings.pattern value.";
+    return false;
+  }
+  outModule.pattern = pattern;
+
+  outModule.density =
+      std::clamp(value.value("density", outModule.density), 0.0f, 1.0f);
+
+  TreeGeneratorType treeType = outModule.treeType;
+  if (!tryParseTreeGeneratorType(
+          value.value("tree_type",
+                      std::string(treeGeneratorTypeId(outModule.treeType))),
+          treeType)) {
+    outError = "Unsupported tree_generator.settings.tree_type value.";
+    return false;
+  }
+  outModule.treeType = treeType;
+
+  BlockType trunkBlock = outModule.trunkBlock;
+  if (!fromJson(value.value("trunk_block", json()), trunkBlock) ||
+      trunkBlock == BlockType::AIR || trunkBlock == BlockType::COUNT) {
+    outError = "tree_generator.settings.trunk_block uses an unknown block id.";
+    return false;
+  }
+  outModule.trunkBlock = trunkBlock;
+
+  BlockType leavesBlock = outModule.leavesBlock;
+  if (!fromJson(value.value("leaves_block", json()), leavesBlock) ||
+      leavesBlock == BlockType::AIR || leavesBlock == BlockType::COUNT) {
+    outError = "tree_generator.settings.leaves_block uses an unknown block id.";
+    return false;
+  }
+  outModule.leavesBlock = leavesBlock;
+
+  outModule.infiniteY = value.value("infinite_y", outModule.infiniteY);
+  outModule.minY = value.value("min_y", outModule.minY);
+  outModule.maxY = value.value("max_y", outModule.maxY);
+  if (outModule.maxY < outModule.minY) {
+    std::swap(outModule.minY, outModule.maxY);
+  }
+
+  return true;
+}
+
 // Funcao: executa 'toJson' na serializacao e utilitarios de preset de biome.
 // Detalhe: usa 'module' para encapsular esta etapa especifica do subsistema.
 // Retorno: devolve 'json' com o resultado composto por esta chamada.
@@ -733,6 +850,9 @@ json toJson(const BiomeModule& module) {
     break;
   case ModuleType::DOMAIN_WARPED_NOISE:
     root["settings"] = toJson(module.domainWarpedNoise);
+    break;
+  case ModuleType::TREE_GENERATOR:
+    root["settings"] = toJson(module.treeGenerator);
     break;
   }
 
@@ -818,6 +938,11 @@ bool fromJson(const json& value, BiomeModule& outModule, std::string& outError) 
     break;
   case ModuleType::DOMAIN_WARPED_NOISE:
     if (!fromJson(settings, module.domainWarpedNoise, outError)) {
+      return false;
+    }
+    break;
+  case ModuleType::TREE_GENERATOR:
+    if (!fromJson(settings, module.treeGenerator, outError)) {
       return false;
     }
     break;

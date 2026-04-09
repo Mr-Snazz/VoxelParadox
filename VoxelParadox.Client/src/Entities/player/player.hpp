@@ -6,22 +6,27 @@
 
 #pragma once
 
+#pragma region Includes
+
+// 1. Standard Library
 #include <cmath>
 #include <cstdlib>
 #include <cstdint>
 
-// External
+// 2. Third-party Libraries
 #include <glm/glm.hpp>
 
-// Solution dependencies
+// 3. Internal Engine/Core Modules
 #include "engine/camera.hpp"
 #include "engine/input.hpp"
 
-// Client
+// 4. Local Project Modules
 #include "enemies/enemy_types.hpp"
 #include "hotbar.hpp"
 #include "items/item_catalog.hpp"
 #include "world/world_stack.hpp"
+
+#pragma endregion
 
 enum class PlayerTransition { NONE, DIVING_IN, RISING_OUT };
 
@@ -35,6 +40,9 @@ class GameAudioController;
 
 class Player {
 public:
+#pragma region 1. Constants & Defaults
+    // --- 1. Constants & Defaults ---
+
     static constexpr double kUniverseCreationCooldownSeconds = 600.0;
     static constexpr float kDefaultWalkSpeed = 4.317f;
     static constexpr float kDefaultRunSpeed = 5.612f;
@@ -45,6 +53,9 @@ public:
     static constexpr float kDefaultAirDeceleration = 2.25f;
     static constexpr float kDefaultGroundFriction = 9.0f;
     static constexpr float kDefaultJumpHeight = 1.25f;
+    static constexpr float kDefaultDoubleJumpBoostHeight = 1.25f;
+    static constexpr double kDoubleJumpCooldownSeconds = 5.0;
+    static constexpr double kDoubleJumpWindowSeconds = 0.35;
     static constexpr float kDefaultGravityAcceleration = 3.7f;
     static constexpr float kDefaultPlayerRadius = 0.30f;
     static constexpr float kDefaultStandingHeight = 1.80f;
@@ -57,34 +68,38 @@ public:
     static glm::vec3 nestedWorldSpawnPosition() {
         return glm::vec3(12.0f, 24.0f, 12.0f);
     }
+#pragma endregion
+
+#pragma region 2. Nested Data Structures
+    // --- 2. Nested Data Structures ---
 
     struct NestedPreviewFrame {
-        glm::vec3 center{0.0f};
-        glm::vec3 right{1.0f, 0.0f, 0.0f};
-        glm::vec3 up{0.0f, 1.0f, 0.0f};
-        glm::vec3 front{0.0f, 0.0f, 1.0f};
+        glm::vec3 center{ 0.0f };
+        glm::vec3 right{ 1.0f, 0.0f, 0.0f };
+        glm::vec3 up{ 0.0f, 1.0f, 0.0f };
+        glm::vec3 front{ 0.0f, 0.0f, 1.0f };
     };
 
     struct NestedPreviewPortal {
         bool active = false;
-        glm::ivec3 block{0};
-        glm::ivec3 normal{0};
+        glm::ivec3 block{ 0 };
+        glm::ivec3 normal{ 0 };
         float fade = 0.0f;
         bool hasOverrideFrame = false;
         NestedPreviewFrame overrideFrame{};
     };
 
     struct EnterNestedTransition {
-        glm::ivec3 block{0};
-        glm::ivec3 normal{0};
-        glm::vec3 startPos{0.0f};
-        glm::vec3 targetPos{0.0f};
-        glm::quat startOrientation{1, 0, 0, 0};
-        glm::quat targetOrientation{1, 0, 0, 0};
-        glm::vec3 childPos{0.0f};
-        glm::quat childOrientation{1, 0, 0, 0};
-        glm::vec3 parentReturnPos{0.0f};
-        glm::quat parentReturnOrientation{1, 0, 0, 0};
+        glm::ivec3 block{ 0 };
+        glm::ivec3 normal{ 0 };
+        glm::vec3 startPos{ 0.0f };
+        glm::vec3 targetPos{ 0.0f };
+        glm::quat startOrientation{ 1, 0, 0, 0 };
+        glm::quat targetOrientation{ 1, 0, 0, 0 };
+        glm::vec3 childPos{ 0.0f };
+        glm::quat childOrientation{ 1, 0, 0, 0 };
+        glm::vec3 parentReturnPos{ 0.0f };
+        glm::quat parentReturnOrientation{ 1, 0, 0, 0 };
     };
 
     struct HeadBobSettings {
@@ -114,18 +129,19 @@ public:
     };
 
     struct PersistentState {
-        glm::vec3 cameraPosition{0.0f};
-        glm::quat cameraOrientation{1.0f, 0.0f, 0.0f, 0.0f};
-        glm::vec3 velocity{0.0f};
+        glm::vec3 cameraPosition{ 0.0f };
+        glm::quat cameraOrientation{ 1.0f, 0.0f, 0.0f, 0.0f };
+        glm::vec3 velocity{ 0.0f };
         int lifePoints = 20;
         bool sandboxModeEnabled = false;
         double universeCreationCooldownRemainingSeconds = 0.0;
+        double doubleJumpCooldownRemainingSeconds = 0.0;
         bool grounded = false;
         bool crouching = false;
         float currentEyeHeight = kDefaultStandingEyeHeight;
         float headBobPhase = 0.0f;
         float headBobBlend = 0.0f;
-        glm::vec3 headBobLocalOffset{0.0f};
+        glm::vec3 headBobLocalOffset{ 0.0f };
         float headBobRollRadians = 0.0f;
         float lastFootstepPhase = 0.0f;
         float damageRollTimer = 0.0f;
@@ -133,10 +149,14 @@ public:
         float lifeFlashTimer = 0.0f;
         PlayerHotbar::PersistentState hotbarState{};
     };
+#pragma endregion
 
+#pragma region 3. Public State Variables
+    // --- 3. Public State Variables ---
     // Runtime state used directly by rendering, input, and debug HUD.
+
     Camera camera;
-    glm::vec3 velocity{0.0f};
+    glm::vec3 velocity{ 0.0f };
 
     float walkSpeed = kDefaultWalkSpeed;
     float runSpeed = kDefaultRunSpeed;
@@ -147,6 +167,7 @@ public:
     float airDeceleration = kDefaultAirDeceleration;
     float groundFriction = kDefaultGroundFriction;
     float jumpHeight = kDefaultJumpHeight;
+    float doubleJumpBoostHeight = kDefaultDoubleJumpBoostHeight;
     float gravityAcceleration = kDefaultGravityAcceleration;
     float playerRadius = kDefaultPlayerRadius;
     float standingHeight = kDefaultStandingHeight;
@@ -157,40 +178,90 @@ public:
     float breakRange = 8.0f;
     PlayerHotbar hotbar{};
 
-    //zoom
+    // Zoom
     float normalFov = 80.0f;
     float zoomedFov = 45.0f;
     float zoomSmoothSpeed = 10.0f;
 
+    // Interaction & Target state
     bool hasTarget = false;
-    glm::ivec3 targetBlock{0};
-    glm::ivec3 targetNormal{0};
+    glm::ivec3 targetBlock{ 0 };
+    glm::ivec3 targetNormal{ 0 };
     bool isBreakingBlock = false;
-    glm::ivec3 breakingBlock{0};
+    glm::ivec3 breakingBlock{ 0 };
     BlockType breakingBlockType = BlockType::AIR;
     float breakingTimer = 0.0f;
     float breakingProgress = 0.0f;
     float breakingHitCooldown = 0.0f;
+    double nextDoubleJumpTimeSeconds = 0.0;
+    double doubleJumpWindowExpiresSeconds = 0.0;
     NestedPreviewPortal nestedPreview;
 
+    // Transitions
     PlayerTransition transition = PlayerTransition::NONE;
     float transitionTimer = 0.0f;
     float transitionDuration = 1.0f;
-    glm::vec3 transitionStartPos{0.0f};
-    glm::vec3 transitionEndPos{0.0f};
-    glm::quat transitionStartOrientation{1, 0, 0, 0};
-    glm::quat transitionEndOrientation{1, 0, 0, 0};
+    glm::vec3 transitionStartPos{ 0.0f };
+    glm::vec3 transitionEndPos{ 0.0f };
+    glm::quat transitionStartOrientation{ 1, 0, 0, 0 };
+    glm::quat transitionEndOrientation{ 1, 0, 0, 0 };
     EnterNestedTransition enterNested;
 
+    // View Config
     float previewFadeInDuration = 0.12f;
     float previewFadeOutDuration = 0.18f;
     float previewPreloadRadius = 10.0f;
     int previewPreloadRenderDistance = 2;
     HeadBobSettings headBobSettings{};
     FootstepSettings footstepSettings{};
+#pragma endregion
 
-public:
+#pragma region 4. Public Core Methods
+    // --- 4. Public Core Methods ---
+
     Player();
+
+    // Main frame update entry point.
+    void update(float dt, WorldStack& worldStack,
+        PlayerUpdateMode updateMode = PlayerUpdateMode::FullGameplay);
+
+    PersistentState capturePersistentState() const;
+    void applyPersistentState(const PersistentState& state);
+#pragma endregion
+
+#pragma region 5. Accessors & State Checks
+    // --- 5. Accessors & State Checks ---
+
+    void setAudioController(GameAudioController* controller) { audioController = controller; }
+
+    int getLifePoints() const { return lifePoints; }
+    int getMaxLifePoints() const { return kMaxLifePoints; }
+    bool isAlive() const { return lifePoints > 0; }
+
+    float getStandingEyeHeight() const { return standingEyeHeight; }
+    float getStandingHeight() const { return standingHeight; }
+    bool isGrounded() const { return grounded; }
+    bool isCrouching() const { return crouching; }
+
+    bool isSandboxModeEnabled() const { return sandboxModeEnabled; }
+    void setSandboxModeEnabled(bool enabled) { sandboxModeEnabled = enabled; }
+
+    double getUniverseCreationCooldownRemainingSeconds() const;
+
+    void applyDamage(int damagePoints);
+    glm::vec3 getLifeTextColor() const;
+
+    float getBreakTimeSeconds(BlockType targetType) const {
+        return getToolAdjustedBreakTimeSeconds(
+            hotbar.getSelectedItem(),
+            targetType,
+            getBlockHardness(targetType)
+        );
+    }
+#pragma endregion
+
+#pragma region 6. Inventory & Hotbar Integration
+    // --- 6. Inventory & Hotbar Integration ---
 
     // Inventory/hotbar access used by HUD and gameplay.
     const PlayerHotbar& getHotbar() const { return hotbar; }
@@ -203,19 +274,6 @@ public:
     }
 
     int getSelectedHotbarCount() const { return hotbar.getSelectedCount(); }
-    void setAudioController(GameAudioController* controller) { audioController = controller; }
-    int getLifePoints() const { return lifePoints; }
-    int getMaxLifePoints() const { return kMaxLifePoints; }
-    bool isAlive() const { return lifePoints > 0; }
-    float getStandingEyeHeight() const { return standingEyeHeight; }
-    float getStandingHeight() const { return standingHeight; }
-    bool isGrounded() const { return grounded; }
-    bool isCrouching() const { return crouching; }
-    bool isSandboxModeEnabled() const { return sandboxModeEnabled; }
-    void setSandboxModeEnabled(bool enabled) { sandboxModeEnabled = enabled; }
-    double getUniverseCreationCooldownRemainingSeconds() const;
-    void applyDamage(int damagePoints);
-    glm::vec3 getLifeTextColor() const;
 
     bool hasSelectedHotbarItem() const {
         return hotbar.hasSelectedItem() && isPlaceableInventoryItem(hotbar.getSelectedItem());
@@ -223,11 +281,6 @@ public:
 
     bool isHoldingTool() const {
         return hotbar.hasSelectedItem() && isToolItem(hotbar.getSelectedItem());
-    }
-
-    float getBreakTimeSeconds(BlockType targetType) const {
-        return getToolAdjustedBreakTimeSeconds(hotbar.getSelectedItem(), targetType,
-                                              getBlockHardness(targetType));
     }
 
     bool isInventoryOpen() const { return hotbar.isInventoryOpen(); }
@@ -283,6 +336,7 @@ public:
         return hotbar.getCraftingBulkResult();
     }
 
+    // Hotbar Actions
     bool clickInventoryStorageSlot(int index, PlayerHotbar::ClickType clickType) {
         return hotbar.clickStorageSlot(index, clickType);
     }
@@ -304,18 +358,20 @@ public:
     }
 
     void clearHotbar() { hotbar.clear(); }
-    PersistentState capturePersistentState() const;
-    void applyPersistentState(const PersistentState& state);
+#pragma endregion
+
+#pragma region 7. Portals & Nesting Logic
+    // --- 7. Portals & Nesting Logic ---
 
     // Portal preview camera construction is public because rendering/debug code uses it.
     static Camera buildNestedPreviewCamera(const Camera& source,
-                                           const NestedPreviewPortal& portal);
-
-    // Main frame update entry point.
-    void update(float dt, WorldStack& worldStack,
-                PlayerUpdateMode updateMode = PlayerUpdateMode::FullGameplay);
+        const NestedPreviewPortal& portal);
+#pragma endregion
 
 private:
+#pragma region 8. Internal Constants & State
+    // --- 8. Internal Constants & State ---
+
     static constexpr float kPhysicsMaxStep = 1.0f / 120.0f;
     static constexpr float kSafeFaceDistance = 0.10f;
     static constexpr float kBreakHitRepeatInterval = 0.23f;
@@ -327,7 +383,7 @@ private:
     static constexpr float kLifeFlashDuration = 0.30f;
     static constexpr int kLifeFlashPulseCount = 3;
     static constexpr int kMaxLifePoints = 20;
-    static constexpr glm::vec3 kLifeTextBaseColor{1.0f, 0.42f, 0.42f};
+    static constexpr glm::vec3 kLifeTextBaseColor{ 1.0f, 0.42f, 0.42f };
 
     GameAudioController* audioController = nullptr;
     int lifePoints = kMaxLifePoints;
@@ -339,85 +395,105 @@ private:
     float currentEyeHeight = kDefaultStandingEyeHeight;
     float headBobPhase = 0.0f;
     float headBobBlend = 0.0f;
-    glm::vec3 headBobLocalOffset{0.0f};
+    glm::vec3 headBobLocalOffset{ 0.0f };
     float headBobRollRadians = 0.0f;
     float lastFootstepPhase = 0.0f;
     bool sandboxModeEnabled = false;
     double nextUniverseCreationTimeSeconds = 0.0;
+#pragma endregion
+
+#pragma region 9. Internal Math & Portals
+    // --- 9. Internal Math & Portals ---
 
     // Portal math helpers.
     static float smoothstep01(float t);
     static void buildPortalBasis(glm::ivec3 faceNormal, glm::vec3& normal,
-                                 glm::vec3& tangent, glm::vec3& bitangent);
+        glm::vec3& tangent, glm::vec3& bitangent);
     static NestedPreviewFrame buildNestedPreviewFrame(const NestedPreviewPortal& portal);
     static NestedPreviewFrame defaultNestedPreviewFrame();
-    static glm::vec3 toPortalLocal(const NestedPreviewFrame& frame,
-                                   const glm::vec3& worldVec);
-    static glm::vec3 fromPortalLocal(const NestedPreviewFrame& frame,
-                                     const glm::vec3& localVec);
-    static NestedPreviewFrame buildPreviewOverrideFrame(const Camera& source,
-                                                        const NestedPreviewPortal& portal,
-                                                        const Camera& desiredNestedCamera);
 
-    // Movement and transient state.
-    void updateCameraLook();
-    void simulateMovement(float dt, FractalWorld* world, bool allowMovementInput);
-    void clearTargetSelection();
-    void clearTargetOnly();
-    void resetBlockBreaking();
-    void notifyInventoryStateChanged();
-    void triggerDamageFeedback();
-    void updateDamageFeedback(float dt);
-    void updateHeadBob(float dt, FractalWorld* world, bool active);
-    void applyCameraVisualEffects();
-    BlockType getFootstepBlockType(FractalWorld* world) const;
-    void emitFootstep(FractalWorld* world, float speedAlpha);
-    void handleMovement(float dt, bool allowMovementInput);
-    void handleHotbarSelectionInput();
-    void resolveCollisions(FractalWorld* world, float dt);
-    void updateZoom(float dt, bool allowMovementInput);
-    float getHorizontalSpeed() const { return glm::length(glm::vec2(velocity.x, velocity.z)); }
-    float getCurrentBodyHeight() const;
-    float getTargetEyeHeight() const;
-    glm::vec3 getFeetPosition() const;
-    void setFeetPosition(const glm::vec3& feetPosition);
-    bool wantsToCrouch(bool allowMovementInput) const;
-    void updateStance(FractalWorld* world, bool allowMovementInput, float dt);
-    bool canOccupyBodyAt(FractalWorld* world, const glm::vec3& feetPosition,
-                         float bodyHeight) const;
-    bool hasSupportBelow(FractalWorld* world, const glm::vec3& feetPosition,
-                         float inset, bool requireAllSamples) const;
-    void resolveBodyPenetration(FractalWorld* world, glm::vec3& feetPosition,
-                                float bodyHeight);
+    static glm::vec3 toPortalLocal(const NestedPreviewFrame& frame, const glm::vec3& worldVec);
+    static glm::vec3 fromPortalLocal(const NestedPreviewFrame& frame, const glm::vec3& localVec);
+
+    static NestedPreviewFrame buildPreviewOverrideFrame(const Camera& source,
+        const NestedPreviewPortal& portal,
+        const Camera& desiredNestedCamera);
 
     // Portal preview and traversal state.
     void clearNestedPreview();
     void activateNestedPreview(glm::ivec3 block, glm::ivec3 normal, float fadeValue);
     void beginNestedPreviewFadeIn(glm::ivec3 block, glm::ivec3 normal);
     void showNestedPreviewImmediately(glm::ivec3 block, glm::ivec3 normal);
+
     void updateNestedPreviewAnchorFromSavedState(WorldStack& worldStack,
-                                                 glm::ivec3 block, glm::ivec3 normal);
+        glm::ivec3 block, glm::ivec3 normal);
     void setNestedPreviewOverrideFrame(const NestedPreviewFrame& frame);
+
     bool isLookingAtPortal(FractalWorld* world) const;
     bool canCreateNestedWorldNow() const;
     void markNestedWorldCreated();
+
     bool tryPrepareNestedWorld(WorldStack& worldStack, const glm::ivec3& blockPos,
-                               std::uint32_t* outChildSeed = nullptr,
-                               BiomeSelection* outChildBiome = nullptr,
-                               std::shared_ptr<const VoxelGame::BiomePreset>* outChildPreset =
-                                   nullptr);
+        std::uint32_t* outChildSeed = nullptr,
+        BiomeSelection* outChildBiome = nullptr,
+        std::shared_ptr<const VoxelGame::BiomePreset>* outChildPreset = nullptr);
+
     void handleTransition(float dt, WorldStack& worldStack);
     void finishDiveIn(WorldStack& worldStack);
     void updateNestedPreview(WorldStack& worldStack, FractalWorld* world, float dt);
     void updatePreviewVisibility(WorldStack& worldStack, bool lookingAtPortal, float dt);
-    void preloadNearbyNestedWorld(WorldStack& worldStack, FractalWorld* world,
-                                  bool lookingAtPortal);
-    void enforceSafeNestedSpawn(WorldStack& worldStack, const glm::ivec3& blockPos,
-                                Camera& nestedCamera);
+
+    void preloadNearbyNestedWorld(WorldStack& worldStack, FractalWorld* world, bool lookingAtPortal);
+    void enforceSafeNestedSpawn(WorldStack& worldStack, const glm::ivec3& blockPos, Camera& nestedCamera);
+
     bool isTouchingPortalBlock(glm::ivec3 portalBlock) const;
     bool shouldAutoEnterLookedPortal(FractalWorld* world) const;
     void beginAscendTransition(WorldStack& worldStack);
     void beginNestedEntryTransition(WorldStack& worldStack);
+#pragma endregion
+
+#pragma region 10. Internal Systems (Movement, VFX)
+    // --- 10. Internal Systems (Movement, VFX) ---
+
+    // Movement and transient state.
+    void updateCameraLook();
+    void simulateMovement(float dt, FractalWorld* world, bool allowMovementInput);
+
+    void clearTargetSelection();
+    void clearTargetOnly();
+    void resetBlockBreaking();
+    void notifyInventoryStateChanged();
+
+    void triggerDamageFeedback();
+    void updateDamageFeedback(float dt);
+
+    void updateHeadBob(float dt, FractalWorld* world, bool active);
+    void applyCameraVisualEffects();
+
+    BlockType getFootstepBlockType(FractalWorld* world) const;
+    void emitFootstep(FractalWorld* world, float speedAlpha);
+
+    void handleMovement(float dt, bool allowMovementInput);
+    void handleHotbarSelectionInput();
+    void resolveCollisions(FractalWorld* world, float dt);
+    void updateZoom(float dt, bool allowMovementInput);
+
+    float getHorizontalSpeed() const { return glm::length(glm::vec2(velocity.x, velocity.z)); }
+    float getCurrentBodyHeight() const;
+    float getTargetEyeHeight() const;
+    glm::vec3 getFeetPosition() const;
+    void setFeetPosition(const glm::vec3& feetPosition);
+
+    bool wantsToCrouch(bool allowMovementInput) const;
+    void updateStance(FractalWorld* world, bool allowMovementInput, float dt);
+
+    bool canOccupyBodyAt(FractalWorld* world, const glm::vec3& feetPosition, float bodyHeight) const;
+    bool hasSupportBelow(FractalWorld* world, const glm::vec3& feetPosition, float inset, bool requireAllSamples) const;
+    void resolveBodyPenetration(FractalWorld* world, glm::vec3& feetPosition, float bodyHeight);
+#pragma endregion
+
+#pragma region 11. Block Interaction
+    // --- 11. Block Interaction ---
 
     // Block interaction and targeting.
     void handleBlockInteraction(WorldStack& worldStack, float dt);
@@ -427,4 +503,5 @@ private:
     void dropSelectedItem(WorldStack& worldStack);
     void spawnEnemyAtTarget(WorldStack& worldStack, EnemyType type);
     void doRaycast(FractalWorld* world);
+#pragma endregion
 };

@@ -172,6 +172,8 @@ const char* moduleTypeId(ModuleType type) {
     return "ridged_noise";
   case ModuleType::DOMAIN_WARPED_NOISE:
     return "domain_warped_noise";
+  case ModuleType::TREE_GENERATOR:
+    return "tree_generator";
   default:
     return "unknown";
   }
@@ -197,6 +199,8 @@ const char* moduleTypeDisplayName(ModuleType type) {
     return "Ridged Noise";
   case ModuleType::DOMAIN_WARPED_NOISE:
     return "Domain Warped Noise";
+  case ModuleType::TREE_GENERATOR:
+    return "Tree Generator";
   default:
     return "Unknown";
   }
@@ -239,6 +243,10 @@ bool tryParseModuleType(const std::string& value, ModuleType& outType) {
     outType = ModuleType::DOMAIN_WARPED_NOISE;
     return true;
   }
+  if (value == "tree_generator") {
+    outType = ModuleType::TREE_GENERATOR;
+    return true;
+  }
   outType = ModuleType::PERLIN_TERRAIN;
   return false;
 }
@@ -276,6 +284,50 @@ bool tryParseVoxPlacementPattern(const std::string& value,
     return true;
   }
   outPattern = VoxPlacementPattern::RANDOM_SCATTER;
+  return false;
+}
+
+const char* treeGeneratorTypeId(TreeGeneratorType type) {
+  switch (type) {
+  case TreeGeneratorType::NORMAL:
+    return "normal";
+  case TreeGeneratorType::STRANGE:
+    return "strange";
+  case TreeGeneratorType::TRUNK_ONLY:
+    return "trunk_only";
+  default:
+    return "normal";
+  }
+}
+
+const char* treeGeneratorTypeDisplayName(TreeGeneratorType type) {
+  switch (type) {
+  case TreeGeneratorType::NORMAL:
+    return "Normal";
+  case TreeGeneratorType::STRANGE:
+    return "Strange";
+  case TreeGeneratorType::TRUNK_ONLY:
+    return "Trunk Only";
+  default:
+    return "Normal";
+  }
+}
+
+bool tryParseTreeGeneratorType(const std::string& value,
+                               TreeGeneratorType& outType) {
+  if (value == "normal") {
+    outType = TreeGeneratorType::NORMAL;
+    return true;
+  }
+  if (value == "strange") {
+    outType = TreeGeneratorType::STRANGE;
+    return true;
+  }
+  if (value == "trunk_only") {
+    outType = TreeGeneratorType::TRUNK_ONLY;
+    return true;
+  }
+  outType = TreeGeneratorType::NORMAL;
   return false;
 }
 
@@ -452,6 +504,23 @@ BiomeModule BiomeModule::makeDomainWarpedNoise(const std::string& id) {
   result.domainWarpedNoise.warpLacunarity = 2.0f;
   result.domainWarpedNoise.warpScale = 0.045f;
   result.domainWarpedNoise.warpStrength = 9.0f;
+  return result;
+}
+
+BiomeModule BiomeModule::makeTreeGenerator(const std::string& id) {
+  BiomeModule result =
+      makeBaseModule(id, "Tree Generator", ModuleType::TREE_GENERATOR,
+                     LayerBlendMode::PLACE_ON_AIR);
+  result.treeGenerator = {};
+  result.treeGenerator.spawnOnBlocks = {BlockType::MEMBRANE, BlockType::ORGANIC};
+  result.treeGenerator.pattern = VoxPlacementPattern::RANDOM_SCATTER;
+  result.treeGenerator.density = 0.35f;
+  result.treeGenerator.treeType = TreeGeneratorType::NORMAL;
+  result.treeGenerator.trunkBlock = BlockType::MEMBRANE_WEAVE;
+  result.treeGenerator.leavesBlock = BlockType::ORGANIC;
+  result.treeGenerator.infiniteY = false;
+  result.treeGenerator.minY = -8;
+  result.treeGenerator.maxY = 72;
   return result;
 }
 

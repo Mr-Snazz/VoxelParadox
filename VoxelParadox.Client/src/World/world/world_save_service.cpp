@@ -274,6 +274,8 @@ json serializePlayerState(const Player::PersistentState& state) {
         {"sandboxModeEnabled", state.sandboxModeEnabled},
         {"universeCreationCooldownRemainingSeconds",
          state.universeCreationCooldownRemainingSeconds},
+        {"doubleJumpCooldownRemainingSeconds",
+         state.doubleJumpCooldownRemainingSeconds},
         {"grounded", state.grounded},
         {"crouching", state.crouching},
         {"currentEyeHeight", state.currentEyeHeight},
@@ -331,6 +333,11 @@ bool deserializePlayerState(const json& value, Player::PersistentState& outState
         value["universeCreationCooldownRemainingSeconds"].is_number()) {
         outState.universeCreationCooldownRemainingSeconds =
             value["universeCreationCooldownRemainingSeconds"].get<double>();
+    }
+    if (value.contains("doubleJumpCooldownRemainingSeconds") &&
+        value["doubleJumpCooldownRemainingSeconds"].is_number()) {
+        outState.doubleJumpCooldownRemainingSeconds =
+            value["doubleJumpCooldownRemainingSeconds"].get<double>();
     }
     if (value.contains("grounded") && value["grounded"].is_boolean()) {
         outState.grounded = value["grounded"].get<bool>();

@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "id": "tree_generator",
+  "display_name": "Tree Generator",
+  "type": "tree_generator",
+  "enabled": true,
+  "blend_mode": "place_on_air",
+  "settings": {
+    "spawn_on_blocks": [
+      "membrane",
+      "organic"
+    ],
+    "pattern": "random_scatter",
+    "density": 0.35,
+    "tree_type": "normal",
+    "trunk_block": "membrane_weave",
+    "leaves_block": "organic",
+    "infinite_y": false,
+    "min_y": -8,
+    "max_y": 72
+  }
+}

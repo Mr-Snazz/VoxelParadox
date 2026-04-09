@@ -3,21 +3,23 @@
 // It owns shader setup, frame orchestration, and global visual transitions.
 
 #pragma region Includes
+
+// 1. Standard Library
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <utility>
 
-// External
+// 2. Third-party Libraries
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-// Solution dependencies
+// 3. Internal Engine/Core Modules
 #include "engine/camera.hpp"
 #include "engine/engine.hpp"
 
-// Client
+// 4. Local Project Headers
 #include "client_assets.hpp"
 #include "client_defaults.hpp"
 #include "dust_particle_config.hpp"
@@ -26,15 +28,17 @@
 #include "renderer_internal.hpp"
 #include "world/fractal_world.hpp"
 #include "world/world_stack.hpp"
+
 #pragma endregion
 
-#pragma region EmbeddedShadersAndLocalHelpers
 namespace {
 
-// Renderer owns the 3D frame. Most of the file is shader code plus the glue
-// that feeds world, player, and HUD preview data into the GPU.
+#pragma region 1. Embedded Shaders
+    // --- 1. Embedded Shaders ---
+    // Renderer owns the 3D frame. Most of the file is shader code plus the glue
+    // that feeds world, player, and HUD preview data into the GPU.
 
-static const char* BLOCK_VERT = R"(
+    static const char* BLOCK_VERT = R"(
 #version 460 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
@@ -44,6 +48,7 @@ layout(location = 4) in float aMaterial;
 uniform mat4 uVP;
 uniform mat4 uModel;
 out vec3 vWorldPos;
+out vec3 vLocalPos;
 out vec3 vNormal;
 out vec4 vTint;
 out float vAO;
@@ -51,6 +56,7 @@ flat out int vMaterialId;
 void main() {
     vec4 worldPos = uModel * vec4(aPos, 1.0);
     vWorldPos = worldPos.xyz;
+    vLocalPos = aPos;
     vNormal = mat3(uModel) * aNormal;
     vTint = aTint;
     vAO = aAO;
@@ -59,9 +65,10 @@ void main() {
 }
 )";
 
-static const char* BLOCK_FRAG = R"(
+    static const char* BLOCK_FRAG = R"(
 #version 460 core
 in vec3 vWorldPos;
+in vec3 vLocalPos;
 in vec3 vNormal;
 in vec4 vTint;
 in float vAO;
@@ -73,6 +80,7 @@ uniform float uTime;
 uniform float uAlpha;
 uniform float uAoStrength;
 uniform vec4 uBiomeTint;
+uniform int uUseLocalMaterialSpace;
 uniform vec3 uBreakBlockCenter;
 uniform float uBreakProgress;
 out vec4 FragColor;
@@ -283,9 +291,10 @@ float bayerDither4x4(vec2 pix, float brightness) {
 }
 
 void main() {
+    vec3 materialPos = (uUseLocalMaterialSpace != 0) ? vLocalPos : vWorldPos;
     vec3 normal = normalize(vNormal);
     vec3 viewDir = normalize(uCameraPos - vWorldPos);
-    MaterialSample material = sampleBlockMaterial(vMaterialId, vWorldPos, normal, viewDir);
+    MaterialSample material = sampleBlockMaterial(vMaterialId, materialPos, normal, viewDir);
 
     vec3 tint = clamp(vTint.rgb * uBiomeTint.rgb, vec3(0.45), vec3(1.85));
     material.albedo *= tint;
@@ -304,7 +313,7 @@ void main() {
                  mix(vec3(specular), material.albedo * specular, 0.25);
 
     float pulse = 0.5 + 0.5 * sin(uTime * 3.0 + vWorldPos.x + vWorldPos.z);
-    vec2 ditherCoord = faceUv(vWorldPos, normal) * 8.0;
+    vec2 ditherCoord = faceUv(materialPos, normal) * 8.0;
     float ditherMask = bayerDither4x4(floor(ditherCoord), pulse);
     float ditheredPulse = mix(pulse * 0.45, pulse, ditherMask);
     float emissive =
@@ -349,7 +358,7 @@ void main() {
 }
 )";
 
-static const char* LINE_VERT = R"(
+    static const char* LINE_VERT = R"(
 #version 460 core
 layout(location = 0) in vec3 aPos;
 uniform mat4 uMVP;
@@ -358,7 +367,7 @@ void main() {
 }
 )";
 
-static const char* LINE_FRAG = R"(
+    static const char* LINE_FRAG = R"(
 #version 460 core
 uniform vec4 uColor;
 out vec4 FragColor;
@@ -367,7 +376,7 @@ void main() {
 }
 )";
 
-static const char* DEPTH_WINDOW_VERT = R"(
+    static const char* DEPTH_WINDOW_VERT = R"(
 #version 460 core
 layout(location = 0) in vec3 aPos;
 void main() {
@@ -375,14 +384,14 @@ void main() {
 }
 )";
 
-static const char* DEPTH_WINDOW_FRAG = R"(
+    static const char* DEPTH_WINDOW_FRAG = R"(
 #version 460 core
 void main() {
     gl_FragDepth = 1.0;
 }
 )";
 
-static const char* DUST_PARTICLE_VERT = R"(
+    static const char* DUST_PARTICLE_VERT = R"(
 #version 460 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in float aAlpha;
@@ -398,7 +407,7 @@ void main() {
 }
 )";
 
-static const char* DUST_PARTICLE_FRAG = R"(
+    static const char* DUST_PARTICLE_FRAG = R"(
 #version 460 core
 in float vAlpha;
 uniform vec4 uColor;
@@ -408,7 +417,7 @@ void main() {
 }
 )";
 
-static const char* ITEM_SPRITE_VERT = R"(
+    static const char* ITEM_SPRITE_VERT = R"(
 #version 460 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aUV;
@@ -421,7 +430,7 @@ void main() {
 }
 )";
 
-static const char* ITEM_SPRITE_FRAG = R"(
+    static const char* ITEM_SPRITE_FRAG = R"(
 #version 460 core
 in vec2 vUV;
 uniform sampler2D uTexture;
@@ -433,32 +442,37 @@ void main() {
     FragColor = vec4(texColor.rgb, texColor.a * uAlpha);
 }
 )";
+#pragma endregion
 
 } // namespace
 
-#pragma endregion
+#pragma region 2. Renderer Lifecycle
+// --- 2. Renderer Lifecycle ---
 
-#pragma region RendererLifecycle
-// Funcao: inicializa 'init' no renderer principal.
-// Detalhe: centraliza a logica necessaria para preparar os recursos e o estado inicial antes do uso.
-// Retorno: devolve 'bool' para indicar sucesso, presenca, validacao ou qualquer outra condicao relevante produzida pela chamada.
+// Function: initializes 'init' in the main renderer.
+// Detail: centralizes the logic needed to prepare resources and the initial state before use.
+// Return: returns 'bool' to indicate success, presence, validation, or any other relevant condition produced by the call.
 bool Renderer::init() {
     // --- 1. Shader Programs ---
-    // O shader de bloco tenta carregar primeiro dos arquivos reais e so cai no fallback inline se necessario.
+    // The block shader tries to load from real files first and only falls back to inline if necessary.
     if (!blockShader.compileFromFiles(ClientAssets::kBlockVertexShader,
-                                      ClientAssets::kBlockFragmentShader) &&
+        ClientAssets::kBlockFragmentShader) &&
         !blockShader.compile(BLOCK_VERT, BLOCK_FRAG)) {
         return false;
     }
+
     if (!lineShader.compile(LINE_VERT, LINE_FRAG)) {
         return false;
     }
+
     if (!depthWindowShader.compile(DEPTH_WINDOW_VERT, DEPTH_WINDOW_FRAG)) {
         return false;
     }
+
     if (!dustParticleShader.compile(DUST_PARTICLE_VERT, DUST_PARTICLE_FRAG)) {
         return false;
     }
+
     if (!itemSpriteShader.compile(ITEM_SPRITE_VERT, ITEM_SPRITE_FRAG)) {
         return false;
     }
@@ -475,22 +489,28 @@ bool Renderer::init() {
     if (!setupEntityAssets()) {
         return false;
     }
+
     if (!setupBlockModelAssets()) {
         return false;
     }
+
     return true;
 }
 
 void Renderer::setRenderScale(float scale) {
-    renderScale_ = glm::clamp(scale, ClientDefaults::kMinRenderScale,
-                              ClientDefaults::kMaxRenderScale);
+    renderScale_ = glm::clamp(
+        scale,
+        ClientDefaults::kMinRenderScale,
+        ClientDefaults::kMaxRenderScale
+    );
+
     if (renderScale_ >= ClientDefaults::kMaxRenderScale) {
         releaseSceneRenderTarget();
     }
 }
 
-// Funcao: libera 'cleanup' no renderer principal.
-// Detalhe: centraliza a logica necessaria para encerrar a etapa e descartar recursos associados.
+// Function: executes 'cleanup' in the main renderer.
+// Detail: centralizes the logic needed to end the stage and discard associated resources.
 void Renderer::cleanup() {
     // --- 1. Core Geometry ---
     RendererInternal::deleteVertexArrayAndBuffer(crosshairVAO, crosshairVBO);
@@ -510,6 +530,7 @@ void Renderer::cleanup() {
             glDeleteTextures(1, &texture);
         }
     }
+
     itemTextureCache.clear();
     dustParticleScratch.clear();
     dustParticleCapacity = 0;
@@ -526,17 +547,21 @@ void Renderer::cleanup() {
     dustTransition = {};
     heldItemTransition = {};
 }
-
 #pragma endregion
 
-#pragma region FrameRendering
-// Funcao: renderiza 'render' no renderer principal.
-// Detalhe: usa 'worldStack', 'player', 'aspect', 'time', 'debugThirdPersonView' para desenhar a saida visual correspondente usando o estado atual.
+#pragma region 3. Frame Rendering
+// --- 3. Frame Rendering ---
+
+// Function: renders 'render' in the main renderer.
+// Detail: uses 'worldStack', 'player', 'aspect', 'time', 'debugThirdPersonView' to draw the corresponding visual output using the current state.
 void Renderer::render(WorldStack& worldStack, Player& player, float aspect, float time,
-                      bool wireframeMode, bool debugThirdPersonView) {
+    bool wireframeMode, bool debugThirdPersonView) {
     const glm::vec2 viewportSize = ENGINE::GETVIEWPORTSIZE();
-    const glm::ivec2 outputSize(static_cast<int>(viewportSize.x),
-                                static_cast<int>(viewportSize.y));
+    const glm::ivec2 outputSize(
+        static_cast<int>(viewportSize.x),
+        static_cast<int>(viewportSize.y)
+    );
+
     if (outputSize.x <= 0 || outputSize.y <= 0) {
         return;
     }
@@ -548,20 +573,22 @@ void Renderer::render(WorldStack& worldStack, Player& player, float aspect, floa
     const bool usingScaledSceneTarget =
         shouldUseScaledSceneTarget(outputSize) &&
         sceneRenderTarget_.framebuffer != 0;
-    const glm::ivec2 sceneSize =
-        usingScaledSceneTarget ? sceneRenderTarget_.size : outputSize;
+
+    const glm::ivec2 sceneSize = usingScaledSceneTarget ? sceneRenderTarget_.size : outputSize;
 
     if (usingScaledSceneTarget) {
         glBindFramebuffer(GL_FRAMEBUFFER, sceneRenderTarget_.framebuffer);
-    } else {
+    }
+    else {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+
     glViewport(0, 0, sceneSize.x, sceneSize.y);
 
     const float sceneAspect =
         static_cast<float>(outputSize.x) / static_cast<float>(glm::max(outputSize.y, 1));
-    renderScene(worldStack, player, sceneAspect, time, wireframeMode,
-                debugThirdPersonView);
+
+    renderScene(worldStack, player, sceneAspect, time, wireframeMode, debugThirdPersonView);
 
     if (!usingScaledSceneTarget) {
         return;
@@ -570,30 +597,35 @@ void Renderer::render(WorldStack& worldStack, Player& player, float aspect, floa
     glBindFramebuffer(GL_READ_FRAMEBUFFER, sceneRenderTarget_.framebuffer);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, sceneSize.x, sceneSize.y, 0, 0, outputSize.x,
-                      outputSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        outputSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, outputSize.x, outputSize.y);
 }
 
 void Renderer::renderScene(WorldStack& worldStack, Player& player, float aspect, float time,
-                           bool wireframeMode, bool debugThirdPersonView) {
-    // Este e o ponto de coordenacao do frame 3D: mundo ativo, preview aninhado, itens, particulas e overlays.
+    bool wireframeMode, bool debugThirdPersonView) {
+    // This is the coordination point of the 3D frame: active world, nested preview, items, particles, and overlays.
+
     // --- 1. Frame Atmosphere & Transitions ---
     const int depth = worldStack.currentDepth();
     glm::vec4 fog = getFogColor(depth);
 
     if (player.transition != PlayerTransition::NONE && player.transitionDuration > 0.0f) {
-        const float t = glm::clamp(player.transitionTimer / player.transitionDuration,
-                                   0.0f, 1.0f);
+        const float t = glm::clamp(
+            player.transitionTimer / player.transitionDuration,
+            0.0f, 1.0f
+        );
+
         const auto smooth01 = [](float x) {
             const float clamped = glm::clamp(x, 0.0f, 1.0f);
             return clamped * clamped * (3.0f - 2.0f * clamped);
-        };
+            };
 
         float darkAmount = 0.0f;
         if (player.transition == PlayerTransition::DIVING_IN) {
             darkAmount = 0.92f * smooth01(glm::clamp(t * 1.25f, 0.0f, 1.0f));
-        } else if (player.transition == PlayerTransition::RISING_OUT) {
+        }
+        else if (player.transition == PlayerTransition::RISING_OUT) {
             darkAmount = 0.60f * smooth01(1.0f - t);
         }
         fog = glm::mix(fog, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), darkAmount);
@@ -617,10 +649,12 @@ void Renderer::renderScene(WorldStack& worldStack, Player& player, float aspect,
     const glm::mat4 view = sceneCamera.getViewMatrix();
     const glm::mat4 proj = sceneCamera.getProjectionMatrix(aspect);
     const glm::mat4 vp = proj * view;
+
     float breakProgress = 0.0f;
     glm::vec3 breakBlockCenter(0.0f);
     float highlightActive = 0.0f;
     glm::vec3 highlightBlockCenter(0.0f);
+
     if (world && player.hasTarget && player.isBreakingBlock &&
         player.breakingBlock == player.targetBlock) {
         const BlockType targetType = world->getBlock(player.targetBlock);
@@ -629,6 +663,7 @@ void Renderer::renderScene(WorldStack& worldStack, Player& player, float aspect,
             breakBlockCenter = glm::vec3(player.targetBlock) + glm::vec3(0.5f);
         }
     }
+
     if (world && player.hasTarget && HUD::isVisible()) {
         const BlockType targetType = world->getBlock(player.targetBlock);
         if (canTargetBlock(targetType)) {
@@ -644,26 +679,31 @@ void Renderer::renderScene(WorldStack& worldStack, Player& player, float aspect,
     blockShader.setVec3("uCameraPos", sceneCamera.position);
     blockShader.setVec4("uFogColor", fog);
     blockShader.setFloat("uFogDensity",
-                         computeFogDensity(depth, world ? world->renderDistance : 5));
+        computeFogDensity(depth, world ? world->renderDistance : 5));
     blockShader.setFloat("uTime", time);
     blockShader.setFloat("uAlpha", 1.0f);
     blockShader.setFloat("uAoStrength", 1.0f);
     blockShader.setVec4("uBiomeTint", getBiomeMaterialTint(world, depth));
+    blockShader.setInt("uUseLocalMaterialSpace", 0);
+
     setBreakEffectUniforms(breakBlockCenter, breakProgress);
     setHighlightEffectUniforms(highlightBlockCenter, highlightActive);
 
     const glm::vec3 cullingCameraPos =
         debugThirdPersonView ? player.camera.position : sceneCamera.position;
+
     const glm::mat4 cullingViewProjection =
         debugThirdPersonView
-            ? player.camera.getProjectionMatrix(aspect) * player.camera.getViewMatrix()
-            : vp;
+        ? player.camera.getProjectionMatrix(aspect) * player.camera.getViewMatrix()
+        : vp;
 
     if (wireframeMode) {
         // Keep the toggle scoped to the terrain pass so HUD and overlays stay filled.
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
+
     worldStack.render(sceneCamera.position, vp, cullingCameraPos, cullingViewProjection);
+
     if (wireframeMode) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
@@ -674,15 +714,17 @@ void Renderer::renderScene(WorldStack& worldStack, Player& player, float aspect,
     // --- 4. Supplemental World Passes ---
     if (world) {
         renderWorldBlockModels(*world, vp, sceneCamera.position, fog, depth,
-                               world->renderDistance, time, 1.0f);
+            world->renderDistance, time, 1.0f);
     }
+
     if (world) {
         renderEntities(*world, vp, sceneCamera.position, fog, depth,
-                       world->renderDistance, time, 1.0f);
+            world->renderDistance, time, 1.0f);
     }
+
     if (world) {
         renderDroppedItems(*world, vp, sceneCamera.position, fog, depth, world->renderDistance,
-                           time, 1.0f);
+            time, 1.0f);
     }
 
     if (world && player.hasTarget && HUD::isVisible()) {
@@ -694,47 +736,57 @@ void Renderer::renderScene(WorldStack& worldStack, Player& player, float aspect,
         isSolid(world->getBlock(player.nestedPreview.block))) {
         FractalWorld* nestedWorld =
             worldStack.getOrCreateNestedPreviewWorld(player.nestedPreview.block);
+
         if (nestedWorld) {
             renderStencilMask(vp, player.nestedPreview.block, player.nestedPreview.normal);
             prepareStencilDepthWindow();
             renderNestedPreviewWorld(worldStack, *nestedWorld, player.nestedPreview,
-                                     player.camera, aspect, time);
+                player.camera, aspect, time);
             renderPortalFrame(vp, player.nestedPreview.block, player.nestedPreview.normal,
-                              player.nestedPreview.fade);
+                player.nestedPreview.fade);
         }
     }
 
     if (world && dustTransition.visibility > 0.001f) {
         renderDustParticles(*world, sceneCamera, vp, fog, depth, time,
-                            dustTransition.visibility);
+            dustTransition.visibility);
     }
 
     // --- 6. Debug & Held Item Overlays ---
     if (debugThirdPersonView) {
         renderCameraFrustumDebug(player.camera, vp);
-    } else if (!player.isInventoryOpen() && HUD::isVisible()) {
+    }
+    else if (!player.isInventoryOpen() && HUD::isVisible()) {
         renderHeldItem(player, world, vp, depth, time, heldItemTransition.visibility);
     }
 }
-
 #pragma endregion
 
+#pragma region 4. Scene Render Targets
+// --- 4. Scene Render Targets ---
+
 glm::ivec2 Renderer::sceneRenderSizeFor(const glm::ivec2& outputSize) const {
-    const float clampedScale =
-        glm::clamp(renderScale_, ClientDefaults::kMinRenderScale,
-                   ClientDefaults::kMaxRenderScale);
+    const float clampedScale = glm::clamp(
+        renderScale_,
+        ClientDefaults::kMinRenderScale,
+        ClientDefaults::kMaxRenderScale
+    );
+
     return glm::ivec2(
         glm::max(1, static_cast<int>(std::lround(outputSize.x * clampedScale))),
-        glm::max(1, static_cast<int>(std::lround(outputSize.y * clampedScale))));
+        glm::max(1, static_cast<int>(std::lround(outputSize.y * clampedScale)))
+    );
 }
 
 bool Renderer::shouldUseScaledSceneTarget(const glm::ivec2& outputSize) const {
-    return outputSize.x > 0 && outputSize.y > 0 &&
-           renderScale_ < (ClientDefaults::kMaxRenderScale - 0.001f);
+    return outputSize.x > 0 &&
+        outputSize.y > 0 &&
+        renderScale_ < (ClientDefaults::kMaxRenderScale - 0.001f);
 }
 
 void Renderer::ensureSceneRenderTarget(const glm::ivec2& outputSize) {
     const glm::ivec2 targetSize = sceneRenderSizeFor(outputSize);
+
     if (sceneRenderTarget_.framebuffer != 0 && sceneRenderTarget_.size == targetSize) {
         return;
     }
@@ -751,17 +803,16 @@ void Renderer::ensureSceneRenderTarget(const glm::ivec2& outputSize) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, targetSize.x, targetSize.y, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, nullptr);
+        GL_UNSIGNED_BYTE, nullptr);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                           sceneRenderTarget_.colorTexture, 0);
+        sceneRenderTarget_.colorTexture, 0);
 
     glGenRenderbuffers(1, &sceneRenderTarget_.depthStencilRenderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, sceneRenderTarget_.depthStencilRenderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, targetSize.x,
-                          targetSize.y);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, targetSize.x, targetSize.y);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                              GL_RENDERBUFFER,
-                              sceneRenderTarget_.depthStencilRenderbuffer);
+        GL_RENDERBUFFER,
+        sceneRenderTarget_.depthStencilRenderbuffer);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         releaseSceneRenderTarget();
@@ -780,21 +831,27 @@ void Renderer::releaseSceneRenderTarget() {
         glDeleteRenderbuffers(1, &sceneRenderTarget_.depthStencilRenderbuffer);
         sceneRenderTarget_.depthStencilRenderbuffer = 0;
     }
+
     if (sceneRenderTarget_.colorTexture != 0) {
         glDeleteTextures(1, &sceneRenderTarget_.colorTexture);
         sceneRenderTarget_.colorTexture = 0;
     }
+
     if (sceneRenderTarget_.framebuffer != 0) {
         glDeleteFramebuffers(1, &sceneRenderTarget_.framebuffer);
         sceneRenderTarget_.framebuffer = 0;
     }
+
     sceneRenderTarget_.size = glm::ivec2(0);
 }
+#pragma endregion
 
-#pragma region AtmosphereAndTransitions
-// Funcao: retorna 'getFogColor' no renderer principal.
-// Detalhe: usa 'depth' para expor um dado derivado ou um acesso controlado ao estado interno.
-// Retorno: devolve 'glm::vec4' com o resultado composto por esta chamada.
+#pragma region 5. Atmosphere & Transitions
+// --- 5. Atmosphere & Transitions ---
+
+// Function: returns 'getFogColor' in the main renderer.
+// Detail: uses 'depth' to expose derived data or controlled access to internal state.
+// Return: returns 'glm::vec4' with the result composed by this call.
 glm::vec4 Renderer::getFogColor(int depth) {
     static const glm::vec4 fogColors[] = {
         {0.02f, 0.02f, 0.08f, 1.0f},
@@ -807,40 +864,42 @@ glm::vec4 Renderer::getFogColor(int depth) {
         {0.11764706f, 0.65882353f, 0.58823529f, 1.0f}, // #1ea896
         {0.47058824f, 0.52156863f, 0.52156863f, 1.0f}, // #788585
     };
+
     const int index =
         ((depth % static_cast<int>(std::size(fogColors))) +
-         static_cast<int>(std::size(fogColors))) %
+            static_cast<int>(std::size(fogColors))) %
         static_cast<int>(std::size(fogColors));
+
     return fogColors[index];
 }
 
-// Funcao: executa 'computeFogDensity' no renderer principal.
-// Detalhe: usa 'depth', 'renderDistance' para encapsular esta etapa especifica do subsistema.
-// Retorno: devolve 'float' com o valor numerico calculado para a proxima decisao do pipeline.
+// Function: executes 'computeFogDensity' in the main renderer.
+// Detail: uses 'depth', 'renderDistance' to encapsulate this specific stage of the subsystem.
+// Return: returns 'float' with the numerical value calculated for the next pipeline decision.
 float Renderer::computeFogDensity(int depth, int renderDistance) const {
     const float visibleDistance =
         std::max(28.0f, static_cast<float>(renderDistance * 16 - 10));
     const float depthScale = 1.0f + static_cast<float>(depth) * 0.04f;
+
     return (4.6f / visibleDistance) * depthScale;
 }
 
-// Funcao: monta 'makeDustWorldKey' no renderer principal.
-// Detalhe: usa 'world', 'depth' para derivar e compor um valor pronto para a proxima etapa do pipeline.
-// Retorno: devolve 'std::uint64_t' com o valor numerico calculado para a proxima decisao do pipeline.
+// Function: assembles 'makeDustWorldKey' in the main renderer.
+// Detail: uses 'world', 'depth' to derive and compose a value ready for the next pipeline stage.
+// Return: returns 'std::uint64_t' with the numerical value calculated for the next pipeline decision.
 std::uint64_t Renderer::makeDustWorldKey(const FractalWorld* world, int depth) const {
     if (!world) {
         return 0;
     }
 
     return static_cast<std::uint64_t>(world->seed) ^
-           (static_cast<std::uint64_t>(world->depth) << 32) ^
-           (static_cast<std::uint64_t>(static_cast<std::uint32_t>(depth)) << 48);
+        (static_cast<std::uint64_t>(world->depth) << 32) ^
+        (static_cast<std::uint64_t>(static_cast<std::uint32_t>(depth)) << 48);
 }
 
-// Funcao: atualiza 'updateDustTransition' no renderer principal.
-// Detalhe: usa 'world', 'player', 'depth', 'dt' para sincronizar o estado derivado com o frame atual.
-void Renderer::updateDustTransition(FractalWorld* world, const Player& player, int depth,
-                                    float dt) {
+// Function: updates 'updateDustTransition' in the main renderer.
+// Detail: uses 'world', 'player', 'depth', 'dt' to synchronize derived state with the current frame.
+void Renderer::updateDustTransition(FractalWorld* world, const Player& player, int depth, float dt) {
     const auto& dust = DustParticles::config;
     const std::uint64_t currentWorldKey = makeDustWorldKey(world, depth);
     const bool transitionActive = player.transition != PlayerTransition::NONE;
@@ -879,12 +938,13 @@ void Renderer::updateDustTransition(FractalWorld* world, const Player& player, i
         std::min(1.0f, dustTransition.visibility + dust.fadeInSpeed * dt);
 }
 
-// Funcao: atualiza 'updateHeldItemTransition' no renderer principal.
-// Detalhe: usa 'world', 'player', 'depth', 'dt' para sincronizar o estado derivado com o frame atual.
-void Renderer::updateHeldItemTransition(FractalWorld* world, const Player& player, int depth,
-                                        float dt) {
+// Function: updates 'updateHeldItemTransition' in the main renderer.
+// Detail: uses 'world', 'player', 'depth', 'dt' to synchronize derived state with the current frame.
+void Renderer::updateHeldItemTransition(FractalWorld* world, const Player& player, int depth, float dt) {
     constexpr float hideSpeed = 5.0f;
     constexpr float showSpeed = 5.0f;
+    constexpr float swapTravelDistance = 0.34f;
+    constexpr float swapPhaseDurationFallback = 0.09f;
 
     const std::uint64_t currentWorldKey = makeDustWorldKey(world, depth);
     const bool transitionActive = player.transition != PlayerTransition::NONE;
@@ -897,17 +957,41 @@ void Renderer::updateHeldItemTransition(FractalWorld* world, const Player& playe
         heldItemTransition.worldKey = currentWorldKey;
         heldItemTransition.waitingForWorldLoad = !areaReady;
         heldItemTransition.visibility = areaReady ? 1.0f : 0.0f;
+        heldItemTransition.selectedIndex = player.getSelectedHotbarIndex();
+        heldItemTransition.currentItem = player.getSelectedHotbarItem();
+        heldItemTransition.swapFromItem = heldItemTransition.currentItem;
+        heldItemTransition.swapToItem = heldItemTransition.currentItem;
+        heldItemTransition.swapTimer = heldItemTransition.swapDuration;
+        heldItemTransition.swapVerticalOffset = 0.0f;
+        heldItemTransition.swapAnimating = false;
+        heldItemTransition.swapPhase = HeldItemTransitionState::SwapPhase::NONE;
     }
 
     if (currentWorldKey != heldItemTransition.worldKey) {
         heldItemTransition.worldKey = currentWorldKey;
         heldItemTransition.waitingForWorldLoad = true;
+        heldItemTransition.swapAnimating = false;
+        heldItemTransition.swapTimer = 0.0f;
+        heldItemTransition.swapVerticalOffset = 0.0f;
+        heldItemTransition.selectedIndex = player.getSelectedHotbarIndex();
+        heldItemTransition.currentItem = player.getSelectedHotbarItem();
+        heldItemTransition.swapFromItem = heldItemTransition.currentItem;
+        heldItemTransition.swapToItem = heldItemTransition.currentItem;
+        heldItemTransition.swapPhase = HeldItemTransitionState::SwapPhase::NONE;
     }
 
     if (transitionActive) {
         heldItemTransition.waitingForWorldLoad = true;
         heldItemTransition.visibility =
             std::max(0.0f, heldItemTransition.visibility - hideSpeed * dt);
+        heldItemTransition.swapAnimating = false;
+        heldItemTransition.swapTimer = 0.0f;
+        heldItemTransition.swapVerticalOffset = 0.0f;
+        heldItemTransition.selectedIndex = player.getSelectedHotbarIndex();
+        heldItemTransition.currentItem = player.getSelectedHotbarItem();
+        heldItemTransition.swapFromItem = heldItemTransition.currentItem;
+        heldItemTransition.swapToItem = heldItemTransition.currentItem;
+        heldItemTransition.swapPhase = HeldItemTransitionState::SwapPhase::NONE;
         return;
     }
 
@@ -915,13 +999,105 @@ void Renderer::updateHeldItemTransition(FractalWorld* world, const Player& playe
         if (!areaReady) {
             heldItemTransition.visibility =
                 std::max(0.0f, heldItemTransition.visibility - hideSpeed * dt);
+            heldItemTransition.swapAnimating = false;
+            heldItemTransition.swapTimer = 0.0f;
+            heldItemTransition.swapVerticalOffset = 0.0f;
+            heldItemTransition.selectedIndex = player.getSelectedHotbarIndex();
+            heldItemTransition.currentItem = player.getSelectedHotbarItem();
+            heldItemTransition.swapFromItem = heldItemTransition.currentItem;
+            heldItemTransition.swapToItem = heldItemTransition.currentItem;
+            heldItemTransition.swapPhase = HeldItemTransitionState::SwapPhase::NONE;
             return;
         }
         heldItemTransition.waitingForWorldLoad = false;
     }
 
+    const int selectedIndex = player.getSelectedHotbarIndex();
+    const InventoryItem selectedItem = player.getSelectedHotbarItem();
+
+    if (heldItemTransition.selectedIndex != selectedIndex) {
+        heldItemTransition.swapAnimating = true;
+        heldItemTransition.swapPhase = HeldItemTransitionState::SwapPhase::HIDING;
+        heldItemTransition.swapTimer = 0.0f;
+        heldItemTransition.swapDuration = glm::max(
+            heldItemTransition.swapDuration,
+            swapPhaseDurationFallback * 2.0f
+        );
+
+        heldItemTransition.swapFromItem =
+            heldItemTransition.currentItem.empty() ? selectedItem : heldItemTransition.currentItem;
+
+        heldItemTransition.swapToItem = selectedItem;
+        heldItemTransition.selectedIndex = selectedIndex;
+    }
+
+    if (heldItemTransition.swapAnimating) {
+        const float phaseDuration =
+            glm::max(heldItemTransition.swapDuration * 0.5f, 0.0001f);
+
+        const auto easeIn01 = [](float x) {
+            const float clamped = glm::clamp(x, 0.0f, 1.0f);
+            return clamped * clamped * clamped;
+            };
+
+        const auto easeOut01 = [](float x) {
+            const float clamped = glm::clamp(x, 0.0f, 1.0f);
+            const float inv = 1.0f - clamped;
+            return 1.0f - inv * inv * inv;
+            };
+
+        if (heldItemTransition.swapPhase == HeldItemTransitionState::SwapPhase::HIDING) {
+            heldItemTransition.swapTimer =
+                glm::min(heldItemTransition.swapTimer + dt, phaseDuration);
+
+            const float t = heldItemTransition.swapTimer / phaseDuration;
+
+            heldItemTransition.swapVerticalOffset = -swapTravelDistance * easeIn01(t);
+            heldItemTransition.currentItem = heldItemTransition.swapFromItem;
+
+            if (heldItemTransition.swapTimer >= phaseDuration) {
+                heldItemTransition.swapPhase = HeldItemTransitionState::SwapPhase::SHOWING;
+                heldItemTransition.swapTimer = 0.0f;
+                heldItemTransition.currentItem = heldItemTransition.swapToItem;
+                heldItemTransition.swapVerticalOffset = -swapTravelDistance;
+            }
+
+        }
+        else if (heldItemTransition.swapPhase == HeldItemTransitionState::SwapPhase::SHOWING) {
+            heldItemTransition.swapTimer =
+                glm::min(heldItemTransition.swapTimer + dt, phaseDuration);
+
+            const float t = heldItemTransition.swapTimer / phaseDuration;
+
+            heldItemTransition.swapVerticalOffset =
+                -swapTravelDistance * (1.0f - easeOut01(t));
+
+            heldItemTransition.currentItem = heldItemTransition.swapToItem;
+
+            if (heldItemTransition.swapTimer >= phaseDuration) {
+                heldItemTransition.swapAnimating = false;
+                heldItemTransition.swapPhase = HeldItemTransitionState::SwapPhase::NONE;
+                heldItemTransition.swapTimer = 0.0f;
+                heldItemTransition.currentItem = heldItemTransition.swapToItem;
+                heldItemTransition.swapVerticalOffset = 0.0f;
+            }
+
+        }
+        else {
+            heldItemTransition.swapAnimating = false;
+            heldItemTransition.swapTimer = 0.0f;
+            heldItemTransition.swapVerticalOffset = 0.0f;
+            heldItemTransition.currentItem = selectedItem;
+            heldItemTransition.swapPhase = HeldItemTransitionState::SwapPhase::NONE;
+        }
+    }
+    else {
+        heldItemTransition.currentItem = selectedItem;
+        heldItemTransition.swapVerticalOffset = 0.0f;
+        heldItemTransition.swapPhase = HeldItemTransitionState::SwapPhase::NONE;
+    }
+
     heldItemTransition.visibility =
         std::min(1.0f, heldItemTransition.visibility + showSpeed * dt);
 }
-
 #pragma endregion

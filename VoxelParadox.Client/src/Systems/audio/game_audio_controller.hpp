@@ -1,56 +1,91 @@
+// game_audio_controller.hpp
+// Unity mental model: Audio system bridge and event coordinator.
+// Maps gameplay events to audio playback requests and manages listener/music state.
+
 #pragma once
 
+#pragma region Includes
+
+// 1. Standard Library
 #include <string>
 #include <vector>
 
+// 2. Third-party Libraries
 #include <glm/glm.hpp>
 
+// 3. Local Project Modules
 #include "audio/audio_manager.hpp"
 #include "audio/audio_types.hpp"
 #include "world/block.hpp"
 
+#pragma endregion
+
+#pragma region Data Structures
+// --- 1. Data Structures ---
+
 struct GameAudioFrameState {
-  bool paused = false;
-  bool settingsMenuOpen = false;
-  bool inventoryOpen = false;
-  bool portalPreviewActive = false;
-  std::string biomePresetId;
+    bool paused = false;
+    bool settingsMenuOpen = false;
+    bool inventoryOpen = false;
+    bool portalPreviewActive = false;
+    std::string biomePresetId;
 };
+
+#pragma endregion
+
+#pragma region GameAudioController Class
+// --- 2. GameAudioController Class ---
 
 class GameAudioController {
 public:
-  explicit GameAudioController(ENGINE::AUDIO::AudioManager& audioManager);
+    // --- Lifecycle & Core Setup ---
+    explicit GameAudioController(ENGINE::AUDIO::AudioManager& audioManager);
 
-  void applySettings(const ENGINE::AUDIO::AudioSettings& settings);
-  void syncFrame(const ENGINE::AUDIO::AudioListenerState& listenerState,
-                 const GameAudioFrameState& frameState, float dtSeconds);
+    void applySettings(const ENGINE::AUDIO::AudioSettings& settings);
 
-  void onHotbarSelectionChanged();
-  void onInventoryStateChanged(bool open);
-  void onPauseMenuToggled(bool open);
-  void onBlockHit(BlockType blockType, const glm::ivec3& blockPos,
-                  bool initialHit);
-  void onBlockBroken(BlockType blockType, const glm::ivec3& blockPos);
-  void onBlockPlaced(BlockType blockType, const glm::ivec3& blockPos);
-  void onItemCollected();
-  void onPlayerDamaged();
-  void onPlayerFootstep(BlockType blockType, const glm::vec3& worldPosition,
-                        float gain, float pitch);
-  void onEnemyTriggerActivated(const glm::vec3& worldPosition);
-  void onPortalEntered(const glm::ivec3& blockPos,
-                       const std::string& nextBiomePresetId);
-  void onPortalExited(const glm::ivec3& blockPos);
+    // Call every frame to update continuous audio state (music, ambiances, 3D listener).
+    void syncFrame(const ENGINE::AUDIO::AudioListenerState& listenerState,
+        const GameAudioFrameState& frameState, float dtSeconds);
+
+    // --- UI Events ---
+    void onHotbarSelectionChanged();
+    void onInventoryStateChanged(bool open);
+    void onPauseMenuToggled(bool open);
+
+    // --- Gameplay Events (Blocks) ---
+    void onBlockHit(BlockType blockType, const glm::ivec3& blockPos, bool initialHit);
+    void onBlockBroken(BlockType blockType, const glm::ivec3& blockPos);
+    void onBlockPlaced(BlockType blockType, const glm::ivec3& blockPos);
+
+    // --- Gameplay Events (Player/Items) ---
+    void onItemCollected();
+    void onPlayerDamaged();
+    void onPlayerDoubleJump();
+    void onPlayerFootstep(BlockType blockType, const glm::vec3& worldPosition,
+        float gain, float pitch);
+
+    // --- Gameplay Events (World/Entities) ---
+    void onEnemyTriggerActivated(const glm::vec3& worldPosition);
+    void onPortalEntered(const glm::ivec3& blockPos, const std::string& nextBiomePresetId);
+    void onPortalExited(const glm::ivec3& blockPos);
 
 private:
-  ENGINE::AUDIO::SoundPlaybackRequest makeBlockRequest(
-      const glm::ivec3& blockPos, bool disableFadeIn = false) const;
-  ENGINE::AUDIO::SoundPlaybackRequest makeWorldRequest(
-      const glm::vec3& worldPosition, bool disableFadeIn = false) const;
-  void playUiEvent(const char* eventName);
+    // --- Internal Helpers ---
+    ENGINE::AUDIO::SoundPlaybackRequest makeBlockRequest(const glm::ivec3& blockPos,
+        bool disableFadeIn = false) const;
 
-  ENGINE::AUDIO::AudioManager& audioManager_;
-  std::string pendingBiomeOverridePresetId_;
-  bool musicBootstrapped_ = false;
-  bool hasPendingBiomeOverride_ = false;
-  bool forceImmediateMusicRefresh_ = false;
+    ENGINE::AUDIO::SoundPlaybackRequest makeWorldRequest(const glm::vec3& worldPosition,
+        bool disableFadeIn = false) const;
+
+    void playUiEvent(const char* eventName);
+
+    // --- Internal State ---
+    ENGINE::AUDIO::AudioManager& audioManager_;
+    std::string pendingBiomeOverridePresetId_;
+
+    bool musicBootstrapped_ = false;
+    bool hasPendingBiomeOverride_ = false;
+    bool forceImmediateMusicRefresh_ = false;
 };
+
+#pragma endregion

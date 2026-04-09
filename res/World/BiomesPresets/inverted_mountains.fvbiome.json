@@ -34,6 +34,28 @@
         "threshold": 0.23999999463558197
       },
       "type": "ridged_noise"
+    },
+    {
+      "blend_mode": "place_on_air",
+      "display_name": "Tree Generator",
+      "enabled": true,
+      "format_version": 1,
+      "id": "tree_generator",
+      "settings": {
+        "density": 0.009999999776482582,
+        "infinite_y": true,
+        "leaves_block": "organic",
+        "max_y": 72,
+        "min_y": -8,
+        "pattern": "random_scatter",
+        "spawn_on_blocks": [
+          "membrane",
+          "membrane_weave"
+        ],
+        "tree_type": "strange",
+        "trunk_block": "membrane_weave"
+      },
+      "type": "tree_generator"
     }
   ],
   "preview": {
@@ -44,7 +66,7 @@
       "y": 1,
       "z": 2
     },
-    "seed": 42,
+    "seed": 0,
     "stream_render_distance": 5
   }
 }

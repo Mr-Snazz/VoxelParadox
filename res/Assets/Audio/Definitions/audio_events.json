@@ -3,30 +3,30 @@
     {
       "id": "ui.hotbar.select",
       "category": "ui",
-      "clips": ["Sounds/UI/hotbar_select.wav"],
+      "clips": [ "Sounds/UI/hotbar_select.wav" ],
       "base_gain": 0.1,
-      "pitch_range": [1.0, 1.0],
-      "volume_range": [1.0, 1.0],
+      "pitch_range": [ 1.0, 1.0 ],
+      "volume_range": [ 1.0, 1.0 ],
       "positional": false,
       "max_concurrency": 6
     },
     {
       "id": "ui.menu.click",
       "category": "ui",
-      "clips": ["Sounds/UI/menu_click.wav"],
+      "clips": [ "Sounds/UI/menu_click.wav" ],
       "base_gain": 0.62,
-      "pitch_range": [1.0, 1.0],
-      "volume_range": [1.0, 1.0],
+      "pitch_range": [ 1.0, 1.0 ],
+      "volume_range": [ 1.0, 1.0 ],
       "positional": false,
       "max_concurrency": 2
     },
     {
       "id": "player.item.pickup",
       "category": "player",
-      "clips": ["Sounds/Player/item_pickup.wav"],
+      "clips": [ "Sounds/Player/item_pickup.mp3" ],
       "base_gain": 0.58,
-      "pitch_range": [0.98, 1.04],
-      "volume_range": [0.96, 1.04],
+      "pitch_range": [ 0.78, 1.34 ],
+      "volume_range": [ 0.96, 1.04 ],
       "positional": false,
       "max_concurrency": 4
     },
@@ -34,12 +34,27 @@
       "id": "player.damage.hit",
       "category": "player",
       "clips": [
-        "Sounds/Player/player_injured.wav"
+        "Sounds/Player/player_hit.mp3"
+      ],
+      "base_gain": 0.96,
+      "pitch_range": [ 0.88, 1.26 ],
+      "volume_range": [ 0.96, 1.04 ],
+      "positional": false,
+      "max_concurrency": 3
+    },
+    {
+      "id": "player.double_jump",
+      "category": "player",
+      "clips": [
+        "Sounds/Player/double_jump.mp3"
       ],
       "base_gain": 0.42,
-      "pitch_range": [0.88, 0.96],
-      "volume_range": [0.96, 1.04],
-      "positional": false,
+      "pitch_range": [ 0.88, 0.96 ],
+      "volume_range": [ 0.96, 1.04 ],
+      "positional": true,
+      "reference_distance": 2.0,
+      "max_distance": 20.0,
+      "rolloff_factor": 0.8,
       "max_concurrency": 3
     },
     {
@@ -49,8 +64,8 @@
         "Sounds/Enemy/guy_jumpscare.wav"
       ],
       "base_gain": 2.5,
-      "pitch_range": [1.8, 1.8],
-      "volume_range": [1.0, 1.0],
+      "pitch_range": [ 1.8, 1.8 ],
+      "volume_range": [ 1.0, 1.0 ],
       "positional": false,
       "reference_distance": 3.0,
       "max_distance": 42.0,
@@ -60,10 +75,10 @@
     {
       "id": "portal.enter",
       "category": "ambient",
-      "clips": ["Sounds/Portal/portal_enter.wav"],
+      "clips": [ "Sounds/Portal/portal_enter.wav" ],
       "base_gain": 0.9,
-      "pitch_range": [0.58, 2.02],
-      "volume_range": [0.96, 1.04],
+      "pitch_range": [ 0.58, 2.02 ],
+      "volume_range": [ 0.96, 1.04 ],
       "positional": true,
       "reference_distance": 4.0,
       "max_distance": 60.0,
@@ -73,10 +88,10 @@
     {
       "id": "portal.exit",
       "category": "ambient",
-      "clips": ["Sounds/Portal/portal_exit.wav"],
+      "clips": [ "Sounds/Portal/portal_exit.wav" ],
       "base_gain": 0.9,
-      "pitch_range": [0.58, 2.02],
-      "volume_range": [0.96, 1.04],
+      "pitch_range": [ 0.58, 2.02 ],
+      "volume_range": [ 0.96, 1.04 ],
       "positional": true,
       "reference_distance": 4.0,
       "max_distance": 60.0,
@@ -92,8 +107,8 @@
       ],
       "base_gain": 0.7,
       "fade_in_seconds": 0.5,
-      "pitch_range": [0.96, 1.04],
-      "volume_range": [0.95, 1.05],
+      "pitch_range": [ 0.96, 1.04 ],
+      "volume_range": [ 0.95, 1.05 ],
       "positional": true,
       "max_concurrency": 12
     },
@@ -105,8 +120,8 @@
         "Sounds/Blocks/generic_place_02.wav"
       ],
       "base_gain": 0.58,
-      "pitch_range": [0.96, 1.04],
-      "volume_range": [0.95, 1.05],
+      "pitch_range": [ 0.96, 1.04 ],
+      "volume_range": [ 0.95, 1.05 ],
       "positional": true,
       "reference_distance": 2.5,
       "max_distance": 18.0,
@@ -121,8 +136,8 @@
         "Sounds/Blocks/generic_break_02.wav"
       ],
       "base_gain": 0.9,
-      "pitch_range": [0.95, 1.04],
-      "volume_range": [0.95, 1.05],
+      "pitch_range": [ 0.95, 1.04 ],
+      "volume_range": [ 0.95, 1.05 ],
       "positional": true,
       "max_concurrency": 8
     },
@@ -134,8 +149,8 @@
         "Sounds/Blocks/generic_place_02.wav"
       ],
       "base_gain": 0.72,
-      "pitch_range": [0.97, 1.03],
-      "volume_range": [0.95, 1.05],
+      "pitch_range": [ 0.97, 1.03 ],
+      "volume_range": [ 0.95, 1.05 ],
       "positional": true,
       "max_concurrency": 8
     },
@@ -152,8 +167,8 @@
       ],
       "base_gain": 0.82,
       "fade_in_seconds": 0.5,
-      "pitch_range": [0.95, 1.03],
-      "volume_range": [0.95, 1.05],
+      "pitch_range": [ 0.95, 1.03 ],
+      "volume_range": [ 0.95, 1.05 ],
       "positional": true,
       "max_concurrency": 12
     },
@@ -169,8 +184,8 @@
         "Sounds/Blocks/stone/step6.ogg"
       ],
       "base_gain": 0.64,
-      "pitch_range": [0.96, 1.03],
-      "volume_range": [0.95, 1.05],
+      "pitch_range": [ 0.96, 1.03 ],
+      "volume_range": [ 0.95, 1.05 ],
       "positional": true,
       "reference_distance": 2.5,
       "max_distance": 18.0,
@@ -188,8 +203,8 @@
         "Sounds/Blocks/stone/break5.ogg"
       ],
       "base_gain": 1.0,
-      "pitch_range": [0.95, 1.03],
-      "volume_range": [0.94, 1.04],
+      "pitch_range": [ 0.95, 1.03 ],
+      "volume_range": [ 0.94, 1.04 ],
       "positional": true,
       "max_concurrency": 10
     },
@@ -205,8 +220,8 @@
         "Sounds/Blocks/stone/step6.ogg"
       ],
       "base_gain": 0.82,
-      "pitch_range": [0.96, 1.02],
-      "volume_range": [0.95, 1.05],
+      "pitch_range": [ 0.96, 1.02 ],
+      "volume_range": [ 0.95, 1.05 ],
       "positional": true,
       "max_concurrency": 8
     },
@@ -222,8 +237,8 @@
       ],
       "base_gain": 0.78,
       "fade_in_seconds": 0.5,
-      "pitch_range": [0.92, 1.08],
-      "volume_range": [0.95, 1.05],
+      "pitch_range": [ 0.92, 1.08 ],
+      "volume_range": [ 0.95, 1.05 ],
       "positional": true,
       "max_concurrency": 12
     },
@@ -238,8 +253,8 @@
         "Sounds/Blocks/organic/step5.ogg"
       ],
       "base_gain": 0.62,
-      "pitch_range": [0.94, 1.06],
-      "volume_range": [0.95, 1.05],
+      "pitch_range": [ 0.94, 1.06 ],
+      "volume_range": [ 0.95, 1.05 ],
       "positional": true,
       "reference_distance": 2.5,
       "max_distance": 18.0,
@@ -259,8 +274,8 @@
         "Sounds/Blocks/organic/break7.ogg"
       ],
       "base_gain": 0.94,
-      "pitch_range": [0.92, 1.08],
-      "volume_range": [0.95, 1.05],
+      "pitch_range": [ 0.92, 1.08 ],
+      "volume_range": [ 0.95, 1.05 ],
       "positional": true,
       "max_concurrency": 10
     },
@@ -275,8 +290,8 @@
         "Sounds/Blocks/organic/step5.ogg"
       ],
       "base_gain": 0.76,
-      "pitch_range": [0.94, 1.06],
-      "volume_range": [0.95, 1.05],
+      "pitch_range": [ 0.94, 1.06 ],
+      "volume_range": [ 0.95, 1.05 ],
       "positional": true,
       "max_concurrency": 8
     },
@@ -293,8 +308,8 @@
       ],
       "base_gain": 0.82,
       "fade_in_seconds": 0.5,
-      "pitch_range": [0.97, 1.02],
-      "volume_range": [0.95, 1.04],
+      "pitch_range": [ 0.97, 1.02 ],
+      "volume_range": [ 0.95, 1.04 ],
       "positional": true,
       "max_concurrency": 12
     },
@@ -310,8 +325,8 @@
         "Sounds/Blocks/metal/step6.ogg"
       ],
       "base_gain": 0.60,
-      "pitch_range": [0.97, 1.02],
-      "volume_range": [0.95, 1.04],
+      "pitch_range": [ 0.97, 1.02 ],
+      "volume_range": [ 0.95, 1.04 ],
       "positional": true,
       "reference_distance": 2.5,
       "max_distance": 18.0,
@@ -328,8 +343,8 @@
         "Sounds/Blocks/metal/break4.ogg"
       ],
       "base_gain": 1.0,
-      "pitch_range": [0.97, 1.02],
-      "volume_range": [0.95, 1.04],
+      "pitch_range": [ 0.97, 1.02 ],
+      "volume_range": [ 0.95, 1.04 ],
       "positional": true,
       "max_concurrency": 10
     },
@@ -343,8 +358,8 @@
         "Sounds/Blocks/metal/place4.ogg"
       ],
       "base_gain": 0.76,
-      "pitch_range": [0.97, 1.02],
-      "volume_range": [0.95, 1.04],
+      "pitch_range": [ 0.97, 1.02 ],
+      "volume_range": [ 0.95, 1.04 ],
       "positional": true,
       "max_concurrency": 8
     },
@@ -369,8 +384,8 @@
       ],
       "base_gain": 0.84,
       "fade_in_seconds": 0.5,
-      "pitch_range": [0.99, 1.05],
-      "volume_range": [0.95, 1.04],
+      "pitch_range": [ 0.99, 1.05 ],
+      "volume_range": [ 0.95, 1.04 ],
       "positional": true,
       "max_concurrency": 12
     },
@@ -394,8 +409,8 @@
         "Sounds/Blocks/crystal/step14.ogg"
       ],
       "base_gain": 0.62,
-      "pitch_range": [0.99, 1.05],
-      "volume_range": [0.95, 1.04],
+      "pitch_range": [ 0.99, 1.05 ],
+      "volume_range": [ 0.95, 1.04 ],
       "positional": true,
       "reference_distance": 2.5,
       "max_distance": 18.0,
@@ -412,8 +427,8 @@
         "Sounds/Blocks/crystal/break4.ogg"
       ],
       "base_gain": 1.05,
-      "pitch_range": [0.99, 1.05],
-      "volume_range": [0.95, 1.04],
+      "pitch_range": [ 0.99, 1.05 ],
+      "volume_range": [ 0.95, 1.04 ],
       "positional": true,
       "max_concurrency": 10
     },
@@ -427,8 +442,8 @@
         "Sounds/Blocks/crystal/place4.ogg"
       ],
       "base_gain": 0.8,
-      "pitch_range": [0.99, 1.05],
-      "volume_range": [0.95, 1.04],
+      "pitch_range": [ 0.99, 1.05 ],
+      "volume_range": [ 0.95, 1.04 ],
       "positional": true,
       "max_concurrency": 8
     }

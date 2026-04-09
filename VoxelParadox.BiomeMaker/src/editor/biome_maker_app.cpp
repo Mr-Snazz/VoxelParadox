@@ -248,6 +248,7 @@ void BiomeMakerApp::ensureDefaultModuleLibrary() {
       {"fractal_noise", ModuleType::FRACTAL_NOISE},
       {"ridged_noise", ModuleType::RIDGED_NOISE},
       {"domain_warped_noise", ModuleType::DOMAIN_WARPED_NOISE},
+      {"tree_generator", ModuleType::TREE_GENERATOR},
   };
 
   for (const DefaultModuleSeed& seed : defaults) {
@@ -287,6 +288,9 @@ void BiomeMakerApp::ensureDefaultModuleLibrary() {
       break;
     case ModuleType::DOMAIN_WARPED_NOISE:
       module = BiomeModule::makeDomainWarpedNoise(seed.id);
+      break;
+    case ModuleType::TREE_GENERATOR:
+      module = BiomeModule::makeTreeGenerator(seed.id);
       break;
     }
     std::string error;
@@ -1683,6 +1687,87 @@ void BiomeMakerApp::drawInspector() {
         }
 
         drawVolumeNoiseSettings(warped.noise);
+      } else if (module->type == ModuleType::TREE_GENERATOR) {
+        ImGui::SeparatorText("Tree Generator");
+        TreeGeneratorModule& tree = module->treeGenerator;
+
+        if (drawBlockTypeMultiSelect("Spawn On Blocks", tree.spawnOnBlocks)) {
+          markSelectedModuleDirty("Updated tree support blocks.");
+        }
+
+        if (ImGui::BeginCombo("Pattern", voxPlacementPatternDisplayName(tree.pattern))) {
+          constexpr VoxPlacementPattern kPatterns[] = {
+              VoxPlacementPattern::GRID,
+              VoxPlacementPattern::RANDOM_SCATTER,
+          };
+          for (VoxPlacementPattern candidate : kPatterns) {
+            const bool selected = candidate == tree.pattern;
+            if (ImGui::Selectable(voxPlacementPatternDisplayName(candidate), selected)) {
+              tree.pattern = candidate;
+              markSelectedModuleDirty("Updated tree pattern.");
+            }
+            if (selected) {
+              ImGui::SetItemDefaultFocus();
+            }
+          }
+          ImGui::EndCombo();
+        }
+
+        if (ImGui::SliderFloat("Density", &tree.density, 0.0f, 1.0f, "%.2f")) {
+          tree.density = std::clamp(tree.density, 0.0f, 1.0f);
+          markSelectedModuleDirty("Updated tree density.");
+        }
+
+        if (ImGui::BeginCombo("Tree Type",
+                              treeGeneratorTypeDisplayName(tree.treeType))) {
+          constexpr TreeGeneratorType kTreeTypes[] = {
+              TreeGeneratorType::NORMAL,
+              TreeGeneratorType::STRANGE,
+              TreeGeneratorType::TRUNK_ONLY,
+          };
+          for (TreeGeneratorType candidate : kTreeTypes) {
+            const bool selected = candidate == tree.treeType;
+            if (ImGui::Selectable(treeGeneratorTypeDisplayName(candidate), selected)) {
+              tree.treeType = candidate;
+              markSelectedModuleDirty("Updated tree type.");
+            }
+            if (selected) {
+              ImGui::SetItemDefaultFocus();
+            }
+          }
+          ImGui::EndCombo();
+        }
+
+        if (drawBlockTypeCombo("Trunk Block", tree.trunkBlock)) {
+          markSelectedModuleDirty("Updated trunk block.");
+        }
+
+        ImGui::BeginDisabled(tree.treeType == TreeGeneratorType::TRUNK_ONLY);
+        if (drawBlockTypeCombo("Leaves Block", tree.leavesBlock)) {
+          markSelectedModuleDirty("Updated leaves block.");
+        }
+        ImGui::EndDisabled();
+
+        if (ImGui::Checkbox("Infinite Y", &tree.infiniteY)) {
+          markSelectedModuleDirty(tree.infiniteY ? "Enabled infinite tree Y."
+                                                 : "Disabled infinite tree Y.");
+        }
+
+        int minY = tree.minY;
+        int maxY = tree.maxY;
+        ImGui::BeginDisabled(tree.infiniteY);
+        if (ImGui::InputInt("Min Y", &minY)) {
+          tree.minY = minY;
+          if (tree.maxY < tree.minY) {
+            tree.maxY = tree.minY;
+          }
+          markSelectedModuleDirty("Updated tree minimum height.");
+        }
+        if (ImGui::InputInt("Max Y", &maxY)) {
+          tree.maxY = std::max(maxY, tree.minY);
+          markSelectedModuleDirty("Updated tree maximum height.");
+        }
+        ImGui::EndDisabled();
       }
     }
 
@@ -1865,6 +1950,56 @@ bool BiomeMakerApp::drawBlockTypeCombo(const char* label, BlockType& blockType) 
     }
     ImGui::EndCombo();
   }
+  return changed;
+}
+
+bool BiomeMakerApp::drawBlockTypeMultiSelect(
+    const char* label, std::vector<BlockType>& blockTypes) {
+  std::string preview = "None";
+  if (!blockTypes.empty()) {
+    preview.clear();
+    for (std::size_t index = 0; index < blockTypes.size(); ++index) {
+      if (index > 0) {
+        preview += ", ";
+      }
+      preview += getBlockDisplayName(blockTypes[index]);
+      if (index == 2 && blockTypes.size() > 3) {
+        preview += ", ...";
+        break;
+      }
+    }
+  }
+
+  bool changed = false;
+  if (ImGui::BeginCombo(label, preview.c_str())) {
+    for (int index = 1; index < static_cast<int>(BlockType::COUNT); ++index) {
+      const BlockType candidate = static_cast<BlockType>(index);
+      const auto iterator =
+          std::find(blockTypes.begin(), blockTypes.end(), candidate);
+      const bool selected = iterator != blockTypes.end();
+      if (ImGui::Selectable(getBlockDisplayName(candidate), selected,
+                            ImGuiSelectableFlags_DontClosePopups)) {
+        if (selected) {
+          if (blockTypes.size() > 1) {
+            blockTypes.erase(iterator);
+            changed = true;
+          }
+        } else {
+          blockTypes.push_back(candidate);
+          std::sort(blockTypes.begin(), blockTypes.end(),
+                    [](BlockType left, BlockType right) {
+                      return static_cast<int>(left) < static_cast<int>(right);
+                    });
+          changed = true;
+        }
+      }
+      if (selected) {
+        ImGui::SetItemDefaultFocus();
+      }
+    }
+    ImGui::EndCombo();
+  }
+
   return changed;
 }
 
